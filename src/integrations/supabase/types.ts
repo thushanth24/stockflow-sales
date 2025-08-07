@@ -14,16 +14,231 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      damages: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          damage_date: string
+          id: string
+          product_id: string | null
+          quantity: number
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          damage_date?: string
+          id?: string
+          product_id?: string | null
+          quantity: number
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          damage_date?: string
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "damages_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_stock: number
+          id: string
+          name: string
+          price: number
+          sku: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_stock?: number
+          id?: string
+          name: string
+          price: number
+          sku: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_stock?: number
+          id?: string
+          name?: string
+          price?: number
+          sku?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          product_id: string | null
+          purchase_date: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_id?: string | null
+          purchase_date?: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_id?: string | null
+          purchase_date?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string | null
+          quantity: number
+          revenue: number
+          sale_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          quantity: number
+          revenue: number
+          sale_date: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          revenue?: number
+          sale_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_updates: {
+        Row: {
+          actual_stock: number
+          created_at: string
+          created_by: string | null
+          id: string
+          previous_stock: number
+          product_id: string | null
+          update_date: string
+        }
+        Insert: {
+          actual_stock: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          previous_stock: number
+          product_id?: string | null
+          update_date?: string
+        }
+        Update: {
+          actual_stock?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          previous_stock?: number
+          product_id?: string | null
+          update_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_updates_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_sales_for_product: {
+        Args: { p_product_id: string; p_update_date: string }
+        Returns: undefined
+      }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "super_admin" | "admin" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +365,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["super_admin", "admin", "staff"],
+    },
   },
 } as const
