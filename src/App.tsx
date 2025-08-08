@@ -12,6 +12,10 @@ import ProductsPage from "@/pages/staff/ProductsPage";
 import PurchasesPage from "@/pages/staff/PurchasesPage";
 import StockUpdatePage from "@/pages/staff/StockUpdatePage";
 import DamagesPage from "@/pages/staff/DamagesPage";
+import ReportsPage from "@/pages/admin/ReportsPage";
+import StockOverviewPage from "@/pages/admin/StockOverviewPage";
+import DamageReportsPage from "@/pages/admin/DamageReportsPage";
+import UserManagementPage from "@/pages/admin/UserManagementPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,30 +38,62 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/dashboard/products" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}>
                 <DashboardLayout>
                   <ProductsPage />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/dashboard/purchases" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}>
                 <DashboardLayout>
                   <PurchasesPage />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/dashboard/stock-update" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}>
                 <DashboardLayout>
                   <StockUpdatePage />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/dashboard/damages" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}>
                 <DashboardLayout>
                   <DamagesPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Admin Routes */}
+            <Route path="/dashboard/reports" element={
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <DashboardLayout>
+                  <ReportsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/stock-overview" element={
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <DashboardLayout>
+                  <StockOverviewPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/damage-reports" element={
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <DashboardLayout>
+                  <DamageReportsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Super Admin Routes */}
+            <Route path="/dashboard/users" element={
+              <ProtectedRoute allowedRoles={['super_admin']}>
+                <DashboardLayout>
+                  <UserManagementPage />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
