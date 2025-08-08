@@ -77,28 +77,35 @@ export default function StockUpdatePage() {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      // Prepare stock update records
-      const stockUpdateRecords = stockUpdates.map(update => {
-        const product = products.find(p => p.id === update.product_id);
-        return {
-          product_id: update.product_id,
-          previous_stock: product?.current_stock || 0,
-          actual_stock: update.actual_stock,
-          update_date: today,
-          created_by: user?.id,
-        };
-      });
+      // Prepare stock update records - only for products with changes
+      const stockUpdateRecords = stockUpdates
+        .filter(update => {
+          const product = products.find(p => p.id === update.product_id);
+          return product && product.current_stock !== update.actual_stock;
+        })
+        .map(update => {
+          const product = products.find(p => p.id === update.product_id);
+          return {
+            product_id: update.product_id,
+            previous_stock: product?.current_stock || 0,
+            actual_stock: update.actual_stock,
+            update_date: today,
+            created_by: user?.id,
+          };
+        });
 
-      // Insert stock updates (this will trigger sales calculation)
-      const { error } = await supabase
-        .from('stock_updates')
-        .insert(stockUpdateRecords);
+      if (stockUpdateRecords.length > 0) {
+        // Insert stock updates (this will trigger sales calculation)
+        const { error } = await supabase
+          .from('stock_updates')
+          .insert(stockUpdateRecords);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       toast({
         title: 'Success',
-        description: 'Stock counts updated successfully. Sales have been calculated automatically.',
+        description: `Stock updated successfully. ${stockUpdateRecords.length} products had changes. Sales calculated automatically.`,
       });
 
       fetchProducts(); // Refresh to show updated stock
