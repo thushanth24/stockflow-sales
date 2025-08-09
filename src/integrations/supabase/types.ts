@@ -223,11 +223,45 @@ export type Database = {
           },
         ]
       }
+      stock_updates_archive: {
+        Row: {
+          actual_stock: number
+          created_at: string
+          created_by: string | null
+          id: string
+          previous_stock: number
+          product_id: string | null
+          update_date: string
+        }
+        Insert: {
+          actual_stock: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          previous_stock: number
+          product_id?: string | null
+          update_date?: string
+        }
+        Update: {
+          actual_stock?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          previous_stock?: number
+          product_id?: string | null
+          update_date?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      archive_old_stock_updates: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       calculate_sales_for_product: {
         Args: { p_product_id: string; p_update_date: string }
         Returns: undefined
