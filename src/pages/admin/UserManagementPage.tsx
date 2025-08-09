@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { UserRole } from '@/hooks/useAuth';
+import { UserRole, useAuth } from '@/hooks/useAuth';
 import { Users, UserPlus, Edit } from 'lucide-react';
 
 interface UserProfile {
@@ -35,6 +35,7 @@ export default function UserManagementPage() {
     password: '',
   });
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   useEffect(() => {
     fetchUsers();
@@ -111,9 +112,52 @@ export default function UserManagementPage() {
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!editingUser) return;
+    if (!editingUser || !profile) return;
 
     try {
+      // Security validation: Prevent privilege escalation
+      const currentUserRole = profile.role;
+      const targetRole = formData.role as UserRole;
+      const editingUserRole = editingUser.role;
+
+      // Role hierarchy check
+      const roleHierarchy = { 'staff': 1, 'admin': 2, 'super_admin': 3 };
+      const currentLevel = roleHierarchy[currentUserRole];
+      const targetLevel = roleHierarchy[targetRole];
+      const editingLevel = roleHierarchy[editingUserRole];
+
+      // Prevent users from setting roles higher than their own
+      if (targetLevel > currentLevel) {
+        toast({
+          title: 'Access Denied',
+          description: `You cannot assign a role higher than your own (${currentUserRole})`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Prevent non-super_admins from editing super_admin roles
+      if (editingLevel === 3 && currentLevel < 3) {
+        toast({
+          title: 'Access Denied',
+          description: 'Only super admins can modify super admin accounts',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Prevent users from editing their own role (except super_admins can downgrade themselves)
+      if (editingUser.id === profile.id && targetRole !== editingUserRole) {
+        if (currentUserRole !== 'super_admin' || targetLevel > currentLevel) {
+          toast({
+            title: 'Access Denied', 
+            description: 'You cannot change your own role',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -237,19 +281,23 @@ export default function UserManagementPage() {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select value={formData.role} onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="staff">Staff</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="super_admin">Super Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Role</Label>
+                    <Select value={formData.role} onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="staff">Staff</SelectItem>
+                        {profile?.role && ['admin', 'super_admin'].includes(profile.role) && (
+                          <SelectItem value="admin">Admin</SelectItem>
+                        )}
+                        {profile?.role === 'super_admin' && (
+                          <SelectItem value="super_admin">Super Admin</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
               {!editingUser && (
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
@@ -259,7 +307,9 @@ export default function UserManagementPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
-                    minLength={6}
+                    minLength={8}
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                    title="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
                   />
                 </div>
               )}
