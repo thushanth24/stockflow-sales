@@ -1,9 +1,76 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, ShoppingCart, AlertTriangle, TrendingUp } from 'lucide-react';
 
+interface DashboardStats {
+  totalProducts: number;
+  recentPurchases: number;
+  totalSales: number;
+  recentDamages: number;
+}
+
 export default function Dashboard() {
   const { profile } = useAuth();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProducts: 0,
+    recentPurchases: 0,
+    totalSales: 0,
+    recentDamages: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      // Fetch total products
+      const { count: productsCount } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch recent purchases (last 7 days)
+      const { data: recentPurchasesData } = await supabase
+        .from('purchases')
+        .select('quantity')
+        .gte('purchase_date', weekAgo.toISOString().split('T')[0]);
+
+      // Fetch total sales (last 30 days) - only for admin/super_admin
+      let totalSales = 0;
+      if (profile?.role === 'admin' || profile?.role === 'super_admin') {
+        const { data: salesData } = await supabase
+          .from('sales')
+          .select('revenue')
+          .gte('sale_date', monthAgo.toISOString().split('T')[0]);
+        
+        totalSales = salesData?.reduce((sum, sale) => sum + Number(sale.revenue), 0) || 0;
+      }
+
+      // Fetch recent damages (last 7 days)
+      const { data: recentDamagesData } = await supabase
+        .from('damages')
+        .select('quantity')
+        .gte('damage_date', weekAgo.toISOString().split('T')[0]);
+
+      setStats({
+        totalProducts: productsCount || 0,
+        recentPurchases: recentPurchasesData?.reduce((sum, purchase) => sum + purchase.quantity, 0) || 0,
+        totalSales,
+        recentDamages: recentDamagesData?.reduce((sum, damage) => sum + damage.quantity, 0) || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatRole = (role: string) => {
     return role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -25,7 +92,9 @@ export default function Dashboard() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
+            <div className="text-2xl font-bold">
+              {loading ? '--' : stats.totalProducts}
+            </div>
             <p className="text-xs text-muted-foreground">
               Products in inventory
             </p>
@@ -38,7 +107,9 @@ export default function Dashboard() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
+            <div className="text-2xl font-bold">
+              {loading ? '--' : stats.recentPurchases}
+            </div>
             <p className="text-xs text-muted-foreground">
               This week
             </p>
@@ -52,12 +123,14 @@ export default function Dashboard() {
                 <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">$--</div>
-                <p className="text-xs text-muted-foreground">
-                  This month
-                </p>
-              </CardContent>
+               <CardContent>
+                 <div className="text-2xl font-bold">
+                   {loading ? '$--' : `$${stats.totalSales.toFixed(2)}`}
+                 </div>
+                 <p className="text-xs text-muted-foreground">
+                   This month
+                 </p>
+               </CardContent>
             </Card>
 
             <Card>
@@ -65,12 +138,14 @@ export default function Dashboard() {
                 <CardTitle className="text-sm font-medium">Damage Reports</CardTitle>
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">--</div>
-                <p className="text-xs text-muted-foreground">
-                  This week
-                </p>
-              </CardContent>
+               <CardContent>
+                 <div className="text-2xl font-bold">
+                   {loading ? '--' : stats.recentDamages}
+                 </div>
+                 <p className="text-xs text-muted-foreground">
+                   This week
+                 </p>
+               </CardContent>
             </Card>
           </>
         )}

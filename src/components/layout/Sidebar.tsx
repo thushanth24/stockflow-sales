@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Package2,
   ClipboardList,
+  Shield,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -39,6 +40,7 @@ export function Sidebar() {
 
   const superAdminItems = [
     { icon: Users, label: 'User Management', href: '/dashboard/users' },
+    { icon: Shield, label: 'Audit Logs', href: '/dashboard/audit-logs' },
   ];
 
   const getVisibleItems = () => {

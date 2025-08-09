@@ -16,6 +16,8 @@ import ReportsPage from "@/pages/admin/ReportsPage";
 import StockOverviewPage from "@/pages/admin/StockOverviewPage";
 import DamageReportsPage from "@/pages/admin/DamageReportsPage";
 import UserManagementPage from "@/pages/admin/UserManagementPage";
+import AuditLogsPage from "@/pages/admin/AuditLogsPage";
+import Index from "@/pages/Index";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,7 +30,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Index />} />
             <Route path="/auth" element={<LoginPage />} />
             <Route path="/dashboard" element={
               <ProtectedRoute>
@@ -94,6 +96,13 @@ const App = () => (
               <ProtectedRoute allowedRoles={['super_admin']}>
                 <DashboardLayout>
                   <UserManagementPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/audit-logs" element={
+              <ProtectedRoute allowedRoles={['super_admin']}>
+                <DashboardLayout>
+                  <AuditLogsPage />
                 </DashboardLayout>
               </ProtectedRoute>
             } />

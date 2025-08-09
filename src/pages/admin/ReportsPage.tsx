@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { DataExport } from '@/components/DataExport';
 import { BarChart3, TrendingUp, Package, DollarSign } from 'lucide-react';
 
 interface SalesData {
@@ -232,6 +233,14 @@ export default function ReportsPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      <div className="mt-6">
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold">Need to export data?</h3>
+          <p className="text-muted-foreground">Export reports and data for external analysis</p>
+        </div>
+        <DataExport />
+      </div>
     </div>
   );
 }
