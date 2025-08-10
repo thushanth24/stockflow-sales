@@ -5,14 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { Trash2 } from 'lucide-react';
 
 interface Product {
   id: string;
   name: string;
   sku: string;
+  current_stock: number;
 }
 
 interface Purchase {
@@ -25,15 +26,18 @@ interface Purchase {
   };
 }
 
+interface PurchaseEntry {
+  product_id: string;
+  quantity: number;
+}
+
 export default function PurchasesPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [purchaseEntries, setPurchaseEntries] = useState<PurchaseEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState({
-    product_id: '',
-    quantity: '',
-    purchase_date: new Date().toISOString().split('T')[0],
-  });
+  const [submitting, setSubmitting] = useState(false);
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -46,7 +50,7 @@ export default function PurchasesPage() {
       // Fetch products
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('id, name, sku')
+        .select('id, name, sku, current_stock')
         .order('name');
 
       if (productsError) throw productsError;
@@ -78,45 +82,82 @@ export default function PurchasesPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const addPurchaseEntry = () => {
+    setPurchaseEntries([...purchaseEntries, { product_id: '', quantity: 0 }]);
+  };
+
+  const removePurchaseEntry = (index: number) => {
+    setPurchaseEntries(purchaseEntries.filter((_, i) => i !== index));
+  };
+
+  const updatePurchaseEntry = (index: number, field: keyof PurchaseEntry, value: string | number) => {
+    const updated = [...purchaseEntries];
+    updated[index] = { ...updated[index], [field]: value };
+    setPurchaseEntries(updated);
+  };
+
+  const handleSubmit = async () => {
+    if (purchaseEntries.length === 0) {
+      toast({
+        title: 'Error',
+        description: 'Please add at least one purchase entry',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const validEntries = purchaseEntries.filter(entry => 
+      entry.product_id && entry.quantity > 0
+    );
+
+    if (validEntries.length === 0) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all fields with valid quantities',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSubmitting(true);
     
     try {
+      // Insert all purchase records
+      const purchaseRecords = validEntries.map(entry => ({
+        product_id: entry.product_id,
+        quantity: entry.quantity,
+        purchase_date: purchaseDate,
+        created_by: user?.id,
+      }));
+
       const { error } = await supabase
         .from('purchases')
-        .insert([{
-          product_id: formData.product_id,
-          quantity: parseInt(formData.quantity),
-          purchase_date: formData.purchase_date,
-          created_by: user?.id,
-        }]);
+        .insert(purchaseRecords);
 
       if (error) throw error;
 
-      // Update product current stock
-      const { data: product } = await supabase
-        .from('products')
-        .select('current_stock')
-        .eq('id', formData.product_id)
-        .single();
-
-      if (product) {
-        await supabase
+      // Update product current stock for each product
+      for (const entry of validEntries) {
+        const { data: product } = await supabase
           .from('products')
-          .update({ current_stock: product.current_stock + parseInt(formData.quantity) })
-          .eq('id', formData.product_id);
+          .select('current_stock')
+          .eq('id', entry.product_id)
+          .single();
+
+        if (product) {
+          await supabase
+            .from('products')
+            .update({ current_stock: product.current_stock + entry.quantity })
+            .eq('id', entry.product_id);
+        }
       }
 
       toast({
         title: 'Success',
-        description: 'Purchase logged successfully',
+        description: `${validEntries.length} purchase(s) logged successfully`,
       });
 
-      setFormData({
-        product_id: '',
-        quantity: '',
-        purchase_date: new Date().toISOString().split('T')[0],
-      });
+      setPurchaseEntries([]);
       fetchData();
     } catch (error: any) {
       toast({
@@ -124,6 +165,8 @@ export default function PurchasesPage() {
         description: error.message,
         variant: 'destructive',
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -134,103 +177,154 @@ export default function PurchasesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Add Purchase</h1>
-        <p className="text-muted-foreground">Log new stock arrivals</p>
+        <h1 className="text-3xl font-bold">Add Purchases</h1>
+        <p className="text-muted-foreground">Log new stock arrivals for multiple products</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Log New Purchase</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="product">Product</Label>
-                <Select
-                  value={formData.product_id}
-                  onValueChange={(value) => setFormData({ ...formData, product_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a product" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.name} ({product.sku})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  min="1"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="purchase_date">Purchase Date</Label>
-                <Input
-                  id="purchase_date"
-                  type="date"
-                  value={formData.purchase_date}
-                  onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                Log Purchase
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Log Multiple Purchases</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="purchase_date">Purchase Date</Label>
+              <Input
+                id="purchase_date"
+                type="date"
+                value={purchaseDate}
+                onChange={(e) => setPurchaseDate(e.target.value)}
+                className="w-48"
+              />
+            </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Purchases</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Date</TableHead>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Purchase Items</h3>
+                <Button type="button" onClick={addPurchaseEntry} variant="outline">
+                  Add Product
+                </Button>
+              </div>
+
+              {purchaseEntries.length > 0 && (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Current Stock</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {purchaseEntries.map((entry, index) => {
+                      const selectedProduct = products.find(p => p.id === entry.product_id);
+                      return (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <select
+                              className="w-full p-2 border rounded"
+                              value={entry.product_id}
+                              onChange={(e) => updatePurchaseEntry(index, 'product_id', e.target.value)}
+                            >
+                              <option value="">Select a product</option>
+                              {products.map((product) => (
+                                <option key={product.id} value={product.id}>
+                                  {product.name} ({product.sku})
+                                </option>
+                              ))}
+                            </select>
+                          </TableCell>
+                          <TableCell>
+                            {selectedProduct ? selectedProduct.current_stock : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={entry.quantity || ''}
+                              onChange={(e) => updatePurchaseEntry(index, 'quantity', parseInt(e.target.value) || 0)}
+                              className="w-24"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removePurchaseEntry(index)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+
+              {purchaseEntries.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No purchase items added yet. Click "Add Product" to start.
+                </div>
+              )}
+
+              {purchaseEntries.length > 0 && (
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={handleSubmit} 
+                    disabled={submitting}
+                    size="lg"
+                  >
+                    {submitting ? 'Logging Purchases...' : 'Log All Purchases'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Purchases</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {purchases.map((purchase) => (
+                <TableRow key={purchase.id}>
+                  <TableCell>
+                    {purchase.products.name}
+                    <div className="text-sm text-muted-foreground">
+                      {purchase.products.sku}
+                    </div>
+                  </TableCell>
+                  <TableCell>{purchase.quantity}</TableCell>
+                  <TableCell>
+                    {new Date(purchase.purchase_date).toLocaleDateString()}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {purchases.map((purchase) => (
-                  <TableRow key={purchase.id}>
-                    <TableCell>
-                      {purchase.products.name}
-                      <div className="text-sm text-muted-foreground">
-                        {purchase.products.sku}
-                      </div>
-                    </TableCell>
-                    <TableCell>{purchase.quantity}</TableCell>
-                    <TableCell>
-                      {new Date(purchase.purchase_date).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {purchases.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center text-muted-foreground">
-                      No purchases logged yet
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+              ))}
+              {purchases.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    No purchases logged yet
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
