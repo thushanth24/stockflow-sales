@@ -34,7 +34,7 @@ export default function StockUpdatePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [stockUpdates, setStockUpdates] = useState<StockUpdate[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -92,7 +92,7 @@ export default function StockUpdatePage() {
 
   const filterProductsByCategory = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    if (categoryId === '') {
+    if (categoryId === 'all') {
       setFilteredProducts(products);
     } else {
       setFilteredProducts(products.filter(product => product.category_id === categoryId));
@@ -186,7 +186,7 @@ export default function StockUpdatePage() {
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}

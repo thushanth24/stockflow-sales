@@ -39,7 +39,7 @@ export default function ProductsPage() {
     name: '',
     sku: '',
     price: '',
-    category_id: '',
+    category_id: 'none',
   });
   const { user } = useAuth();
   const { toast } = useToast();
@@ -92,7 +92,7 @@ export default function ProductsPage() {
         name: formData.name,
         sku: formData.sku,
         price: parseFloat(formData.price),
-        category_id: formData.category_id || null,
+        category_id: formData.category_id === 'none' ? null : formData.category_id || null,
         created_by: user?.id,
       };
 
@@ -121,7 +121,7 @@ export default function ProductsPage() {
         });
       }
 
-      setFormData({ name: '', sku: '', price: '', category_id: '' });
+      setFormData({ name: '', sku: '', price: '', category_id: 'none' });
       setEditingProduct(null);
       setDialogOpen(false);
       fetchProducts();
@@ -140,14 +140,14 @@ export default function ProductsPage() {
       name: product.name,
       sku: product.sku,
       price: product.price.toString(),
-      category_id: product.category_id || '',
+      category_id: product.category_id || 'none',
     });
     setDialogOpen(true);
   };
 
   const openCreateDialog = () => {
     setEditingProduct(null);
-    setFormData({ name: '', sku: '', price: '', category_id: '' });
+    setFormData({ name: '', sku: '', price: '', category_id: 'none' });
     setDialogOpen(true);
   };
 
@@ -204,7 +204,7 @@ export default function ProductsPage() {
                     <SelectValue placeholder="Select category (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Category</SelectItem>
+                    <SelectItem value="none">No Category</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}

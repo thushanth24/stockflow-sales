@@ -45,7 +45,7 @@ export default function PurchasesPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [purchaseEntries, setPurchaseEntries] = useState<PurchaseEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +107,7 @@ export default function PurchasesPage() {
 
   const filterProductsByCategory = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    if (categoryId === '') {
+    if (categoryId === 'all') {
       setFilteredProducts(products);
     } else {
       setFilteredProducts(products.filter(product => product.category_id === categoryId));
@@ -239,7 +239,7 @@ export default function PurchasesPage() {
                       <SelectValue placeholder="Filter by category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       {categories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
                           {category.name}
