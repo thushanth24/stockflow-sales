@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash2 } from 'lucide-react';
 
 interface Product {
@@ -14,6 +15,15 @@ interface Product {
   name: string;
   sku: string;
   current_stock: number;
+  category_id: string | null;
+  categories?: {
+    name: string;
+  };
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 interface Purchase {
@@ -33,6 +43,9 @@ interface PurchaseEntry {
 
 export default function PurchasesPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [purchaseEntries, setPurchaseEntries] = useState<PurchaseEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,14 +60,24 @@ export default function PurchasesPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch products
+      // Fetch products with categories
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('id, name, sku, current_stock')
+        .select('id, name, sku, current_stock, category_id, categories(name)')
         .order('name');
 
       if (productsError) throw productsError;
       setProducts(productsData || []);
+      setFilteredProducts(productsData || []);
+
+      // Fetch categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+
+      if (categoriesError) throw categoriesError;
+      setCategories(categoriesData || []);
 
       // Fetch recent purchases
       const { data: purchasesData, error: purchasesError } = await supabase
@@ -79,6 +102,15 @@ export default function PurchasesPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const filterProductsByCategory = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    if (categoryId === '') {
+      setFilteredProducts(products);
+    } else {
+      setFilteredProducts(products.filter(product => product.category_id === categoryId));
     }
   };
 
@@ -201,9 +233,24 @@ export default function PurchasesPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Purchase Items</h3>
-                <Button type="button" onClick={addPurchaseEntry} variant="outline">
-                  Add Product
-                </Button>
+                <div className="flex gap-2">
+                  <Select value={selectedCategory} onValueChange={filterProductsByCategory}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Filter by category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" onClick={addPurchaseEntry} variant="outline">
+                    Add Product
+                  </Button>
+                </div>
               </div>
 
               {purchaseEntries.length > 0 && (
@@ -222,18 +269,24 @@ export default function PurchasesPage() {
                       return (
                         <TableRow key={index}>
                           <TableCell>
-                            <select
-                              className="w-full p-2 border rounded"
-                              value={entry.product_id}
-                              onChange={(e) => updatePurchaseEntry(index, 'product_id', e.target.value)}
+                            <Select 
+                              value={entry.product_id} 
+                              onValueChange={(value) => updatePurchaseEntry(index, 'product_id', value)}
                             >
-                              <option value="">Select a product</option>
-                              {products.map((product) => (
-                                <option key={product.id} value={product.id}>
-                                  {product.name} ({product.sku})
-                                </option>
-                              ))}
-                            </select>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a product" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {filteredProducts.map((product) => (
+                                  <SelectItem key={product.id} value={product.id}>
+                                    {product.name} ({product.sku})
+                                    {product.categories?.name && (
+                                      <span className="text-muted-foreground"> - {product.categories.name}</span>
+                                    )}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                           <TableCell>
                             {selectedProduct ? selectedProduct.current_stock : '-'}

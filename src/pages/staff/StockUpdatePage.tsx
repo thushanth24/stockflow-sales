@@ -7,12 +7,22 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Product {
   id: string;
   name: string;
   sku: string;
   current_stock: number;
+  category_id: string | null;
+  categories?: {
+    name: string;
+  };
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 interface StockUpdate {
@@ -22,6 +32,9 @@ interface StockUpdate {
 
 export default function StockUpdatePage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [stockUpdates, setStockUpdates] = useState<StockUpdate[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -30,18 +43,20 @@ export default function StockUpdatePage() {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, sku, current_stock')
+        .select('id, name, sku, current_stock, category_id, categories(name)')
         .order('name');
 
       if (error) throw error;
       
       setProducts(data || []);
+      setFilteredProducts(data || []);
       // Initialize stock updates with current stock
       setStockUpdates(
         (data || []).map(product => ({
@@ -58,6 +73,29 @@ export default function StockUpdatePage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const filterProductsByCategory = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    if (categoryId === '') {
+      setFilteredProducts(products);
+    } else {
+      setFilteredProducts(products.filter(product => product.category_id === categoryId));
     }
   };
 
@@ -139,22 +177,46 @@ export default function StockUpdatePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">
+                Enter actual stock counts for accurate sales calculation
+              </p>
+              <Select value={selectedCategory} onValueChange={filterProductsByCategory}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Product</TableHead>
                   <TableHead>SKU</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Current Stock</TableHead>
                   <TableHead>Actual Count</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((product) => {
+                {filteredProducts.map((product) => {
                   const stockUpdate = stockUpdates.find(u => u.product_id === product.id);
                   return (
                     <TableRow key={product.id}>
                       <TableCell className="font-medium">{product.name}</TableCell>
                       <TableCell>{product.sku}</TableCell>
+                      <TableCell>
+                        {product.categories?.name || (
+                          <span className="text-muted-foreground">No category</span>
+                        )}
+                      </TableCell>
                       <TableCell>{product.current_stock}</TableCell>
                       <TableCell>
                         <Input
@@ -171,10 +233,10 @@ export default function StockUpdatePage() {
                     </TableRow>
                   );
                 })}
-                {products.length === 0 && (
+                {filteredProducts.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No products found. Add products first.
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      {selectedCategory ? "No products in this category" : "No products found. Add products first."}
                     </TableCell>
                   </TableRow>
                 )}

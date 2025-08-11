@@ -27,6 +27,7 @@ export function Sidebar() {
 
   const staffItems = [
     { icon: Package2, label: 'Products', href: '/dashboard/products' },
+    { icon: Package, label: 'Categories', href: '/dashboard/categories' },
     { icon: ShoppingCart, label: 'Add Purchase', href: '/dashboard/purchases' },
     { icon: ClipboardList, label: 'Stock Update', href: '/dashboard/stock-update' },
     { icon: AlertTriangle, label: 'Report Damage', href: '/dashboard/damages' },

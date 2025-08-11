@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Edit } from 'lucide-react';
 
 interface Product {
@@ -17,10 +18,20 @@ interface Product {
   price: number;
   current_stock: number;
   created_at: string;
+  category_id: string | null;
+  categories?: {
+    name: string;
+  };
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -28,19 +39,21 @@ export default function ProductsPage() {
     name: '',
     sku: '',
     price: '',
+    category_id: '',
   });
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('*, categories(name)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -57,6 +70,20 @@ export default function ProductsPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -65,6 +92,7 @@ export default function ProductsPage() {
         name: formData.name,
         sku: formData.sku,
         price: parseFloat(formData.price),
+        category_id: formData.category_id || null,
         created_by: user?.id,
       };
 
@@ -93,7 +121,7 @@ export default function ProductsPage() {
         });
       }
 
-      setFormData({ name: '', sku: '', price: '' });
+      setFormData({ name: '', sku: '', price: '', category_id: '' });
       setEditingProduct(null);
       setDialogOpen(false);
       fetchProducts();
@@ -112,13 +140,14 @@ export default function ProductsPage() {
       name: product.name,
       sku: product.sku,
       price: product.price.toString(),
+      category_id: product.category_id || '',
     });
     setDialogOpen(true);
   };
 
   const openCreateDialog = () => {
     setEditingProduct(null);
-    setFormData({ name: '', sku: '', price: '' });
+    setFormData({ name: '', sku: '', price: '', category_id: '' });
     setDialogOpen(true);
   };
 
@@ -166,6 +195,25 @@ export default function ProductsPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select 
+                  value={formData.category_id} 
+                  onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Category</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="price">Price</Label>
                 <Input
                   id="price"
@@ -194,6 +242,7 @@ export default function ProductsPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>SKU</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Actions</TableHead>
@@ -204,6 +253,11 @@ export default function ProductsPage() {
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.sku}</TableCell>
+                  <TableCell>
+                    {product.categories?.name || (
+                      <span className="text-muted-foreground">No category</span>
+                    )}
+                  </TableCell>
                   <TableCell>${product.price.toFixed(2)}</TableCell>
                   <TableCell>{product.current_stock}</TableCell>
                   <TableCell>
@@ -219,7 +273,7 @@ export default function ProductsPage() {
               ))}
               {products.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     No products found. Add your first product to get started.
                   </TableCell>
                 </TableRow>

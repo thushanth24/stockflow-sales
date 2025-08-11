@@ -15,6 +15,7 @@ import DamagesPage from "@/pages/staff/DamagesPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
 import StockOverviewPage from "@/pages/admin/StockOverviewPage";
 import DamageReportsPage from "@/pages/admin/DamageReportsPage";
+import CategoriesPage from "@/pages/admin/CategoriesPage";
 import UserManagementPage from "@/pages/admin/UserManagementPage";
 import AuditLogsPage from "@/pages/admin/AuditLogsPage";
 import Index from "@/pages/Index";
@@ -87,6 +88,13 @@ const App = () => (
               <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
                 <DashboardLayout>
                   <DamageReportsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/categories" element={
+              <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}>
+                <DashboardLayout>
+                  <CategoriesPage />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
