@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -49,7 +50,7 @@ export default function ReportsPage() {
     goToPage,
     canGoNext,
     canGoPrevious,
-  } = usePagination({ data: salesData, itemsPerPage: 10 });
+  } = usePagination({ data: sales, itemsPerPage: 10 });
 
   useEffect(() => {
     fetchReportsData();

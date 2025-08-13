@@ -47,7 +47,7 @@ export default function PurchasesPage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [purchaseEntries, setPurchaseEntries] = useState<PurchaseEntry[]>([]);
+  const [purchaseEntries, setPurchaseEntries] = useState<{[key: string]: number}>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
@@ -112,40 +112,30 @@ export default function PurchasesPage() {
     } else {
       setFilteredProducts(products.filter(product => product.category_id === categoryId));
     }
+    
+    // Reset the purchase entries to avoid showing products from previous category
+    setPurchaseEntries([]);
   };
 
-  const addPurchaseEntry = () => {
-    setPurchaseEntries([...purchaseEntries, { product_id: '', quantity: 0 }]);
-  };
-
-  const removePurchaseEntry = (index: number) => {
-    setPurchaseEntries(purchaseEntries.filter((_, i) => i !== index));
-  };
-
-  const updatePurchaseEntry = (index: number, field: keyof PurchaseEntry, value: string | number) => {
-    const updated = [...purchaseEntries];
-    updated[index] = { ...updated[index], [field]: value };
-    setPurchaseEntries(updated);
+  const updatePurchaseQuantity = (productId: string, quantity: number) => {
+    setPurchaseEntries(prev => ({
+      ...prev,
+      [productId]: quantity
+    }));
   };
 
   const handleSubmit = async () => {
-    if (purchaseEntries.length === 0) {
-      toast({
-        title: 'Error',
-        description: 'Please add at least one purchase entry',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const validEntries = purchaseEntries.filter(entry => 
-      entry.product_id && entry.quantity > 0
-    );
+    const validEntries = Object.entries(purchaseEntries)
+      .filter(([_, quantity]) => quantity > 0)
+      .map(([productId, quantity]) => ({
+        product_id: productId,
+        quantity: Number(quantity)
+      }));
 
     if (validEntries.length === 0) {
       toast({
         title: 'Error',
-        description: 'Please fill in all fields with valid quantities',
+        description: 'Please add quantities for at least one product',
         variant: 'destructive',
       });
       return;
@@ -186,10 +176,12 @@ export default function PurchasesPage() {
 
       toast({
         title: 'Success',
-        description: `Rs{validEntries.length} purchase(s) logged successfully`,
+        description: `${validEntries.length} purchase(s) logged successfully`,
       });
 
-      setPurchaseEntries([]);
+      // Reset quantities
+      setPurchaseEntries({});
+      // Refresh data
       fetchData();
     } catch (error: any) {
       toast({
@@ -232,90 +224,87 @@ export default function PurchasesPage() {
 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Purchase Items</h3>
-                <div className="flex gap-2">
-                  <Select value={selectedCategory} onValueChange={filterProductsByCategory}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Filter by category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button type="button" onClick={addPurchaseEntry} variant="outline">
-                    Add Product
-                  </Button>
+                <div>
+                  <h3 className="text-lg font-medium">Purchase Items</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Enter quantities for products you want to purchase
+                  </p>
                 </div>
+                <Select value={selectedCategory} onValueChange={filterProductsByCategory}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {purchaseEntries.length > 0 && (
+              <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Product</TableHead>
-                      <TableHead>Current Stock</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead className="w-12"></TableHead>
+                      <TableHead className="w-32">Current Stock</TableHead>
+                      <TableHead className="w-40">Quantity to Add</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {purchaseEntries.map((entry, index) => {
-                      const selectedProduct = products.find(p => p.id === entry.product_id);
-                      return (
-                        <TableRow key={index}>
+                    {filteredProducts.length > 0 ? (
+                      filteredProducts.map((product) => (
+                        <TableRow key={product.id}>
                           <TableCell>
-                            <Select 
-                              value={entry.product_id} 
-                              onValueChange={(value) => updatePurchaseEntry(index, 'product_id', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a product" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {filteredProducts.map((product) => (
-                                  <SelectItem key={product.id} value={product.id}>
-                                    {product.name} ({product.sku})
-                                    {product.categories?.name && (
-                                      <span className="text-muted-foreground"> - {product.categories.name}</span>
-                                    )}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="font-medium">{product.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {product.sku}
+                              {product.categories?.name && (
+                                <span> • {product.categories.name}</span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
-                            {selectedProduct ? selectedProduct.current_stock : '-'}
+                            <div className="font-medium">{product.current_stock}</div>
                           </TableCell>
                           <TableCell>
                             <Input
                               type="number"
-                              min="1"
-                              value={entry.quantity || ''}
-                              onChange={(e) => updatePurchaseEntry(index, 'quantity', parseInt(e.target.value) || 0)}
+                              min="0"
+                              value={purchaseEntries[product.id] || ''}
+                              onChange={(e) => updatePurchaseQuantity(
+                                product.id,
+                                parseInt(e.target.value) || 0
+                              )}
                               className="w-24"
+                              placeholder="0"
                             />
                           </TableCell>
-                          <TableCell>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removePurchaseEntry(index)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
                         </TableRow>
-                      );
-                    })}
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center">
+                          No products found
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
-              )}
+              </div>
+
+              <div className="flex justify-end">
+                <Button 
+                  type="button" 
+                  onClick={handleSubmit}
+                  disabled={submitting || Object.values(purchaseEntries).every(qty => !qty)}
+                >
+                  {submitting ? 'Processing...' : 'Save Purchases'}
+                </Button>
+              </div>
 
               {purchaseEntries.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
