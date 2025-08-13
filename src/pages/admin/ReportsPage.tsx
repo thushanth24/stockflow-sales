@@ -129,16 +129,15 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Sales Reports</h1>
-        <p className="text-muted-foreground">View comprehensive sales analytics and metrics</p>
+    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">Sales Reports</h1>
+        </div>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Date Range Filter</CardTitle>
-        </CardHeader>
+        
         <CardContent>
           <div className="flex gap-4 items-end">
             <div className="space-y-2">
@@ -159,45 +158,56 @@ export default function ReportsPage() {
                 onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
               />
             </div>
-            <Button onClick={handleDateRangeChange}>
+            <Button 
+              onClick={handleDateRangeChange}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md transition-all hover:scale-105"
+            >
               Apply Filter
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-full bg-blue-100 text-blue-600">
+              <DollarSign className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">Rs{stats.totalRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-full bg-green-100 text-green-600">
+              <TrendingUp className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalSales}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-full bg-purple-100 text-purple-600">
+              <Package className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalProducts}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Damages</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-full bg-amber-100 text-amber-600">
+              <BarChart3 className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalDamages}</div>
@@ -206,11 +216,11 @@ export default function ReportsPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Sales Detail</CardTitle>
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+          <CardTitle className="text-2xl font-bold text-indigo-800">Sales Detail</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="divide-y divide-gray-200">
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
@@ -244,13 +254,14 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
       
-      <div className="mt-6">
-        <div className="text-center mb-4">
-          <h3 className="text-lg font-semibold">Need to export data?</h3>
-          <p className="text-muted-foreground">Export reports and data for external analysis</p>
-        </div>
-        <DataExport />
-      </div>
+      <Card className="border-0 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+          <CardTitle className="text-2xl font-bold text-indigo-800">Data Export</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <DataExport />
+        </CardContent>
+      </Card>
     </div>
   );
 }

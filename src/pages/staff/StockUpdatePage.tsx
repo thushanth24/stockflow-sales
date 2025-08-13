@@ -376,49 +376,7 @@ export default function StockUpdatePage() {
         </CardContent>
       </Card>
 
-      <Card className="border-0 shadow-xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
-          <CardTitle className="text-2xl font-bold text-indigo-800">How It Works</CardTitle>
-          <p className="text-sm text-indigo-600">Understanding stock updates and sales calculation</p>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <h4 className="font-medium text-blue-800 mb-2">Stock Update Process</h4>
-              <ul className="space-y-2 text-sm text-blue-700">
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Enter the actual count of each product at the end of the day</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Highlighted rows show changes from current stock</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Click "Update All Stock Counts" to save your changes</span>
-                </li>
-              </ul>
-            </div>
-            
-            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-              <h4 className="font-medium text-green-800 mb-2">Sales Calculation</h4>
-              <p className="text-sm text-green-700 mb-3">
-                The system automatically calculates sales using this formula:
-              </p>
-              <div className="bg-white p-3 rounded border border-green-100 font-mono text-sm text-green-800">
-                <div className="text-center mb-1 font-medium">Sales Calculation</div>
-                <div className="text-center">
-                  <div>Sales = (Previous Stock + Purchases) - (Current Stock + Damages)</div>
-                  <div className="text-xs text-green-600 mt-1">
-                    Ensures accurate tracking without manual entry
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+     
     </div>
   );
 }

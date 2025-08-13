@@ -1,6 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Sidebar } from './Sidebar';
-import { Header } from './Header';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 interface DashboardLayoutProps {
@@ -16,14 +15,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-gray-50">
         <Sidebar />
-        <div className="flex-1 flex flex-col">
-          <Header />
-          <main className="flex-1 p-6">
-            {children}
-          </main>
-        </div>
+        <main className="flex-1 overflow-auto p-6">
+          {children}
+        </main>
       </div>
     </SidebarProvider>
   );

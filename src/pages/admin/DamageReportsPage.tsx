@@ -115,15 +115,16 @@ export default function DamageReportsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Damage Reports</h1>
-        <p className="text-muted-foreground">View and analyze product damage incidents</p>
+    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">Damage Reports</h1>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Date Range Filter</CardTitle>
+      <Card className="border-0 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+          <CardTitle className="text-2xl font-bold text-indigo-800">Date Range Filter</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 items-end">
@@ -145,36 +146,45 @@ export default function DamageReportsPage() {
                 onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
               />
             </div>
-            <Button onClick={handleDateRangeChange}>
+            <Button 
+              onClick={handleDateRangeChange}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md transition-all hover:scale-105"
+            >
               Apply Filter
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Damaged Items</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-full bg-red-100 text-red-600">
+              <Package className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalDamages}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Damage Value</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-full bg-amber-100 text-amber-600">
+              <AlertTriangle className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">Rs{stats.totalValue.toFixed(2)}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Recent Damages (7 days)</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-full bg-blue-100 text-blue-600">
+              <Calendar className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.recentDamages}</div>
@@ -182,14 +192,14 @@ export default function DamageReportsPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Damage Report Details</CardTitle>
+      <Card className="border-0 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+          <CardTitle className="text-2xl font-bold text-indigo-800">Damage Report Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="divide-y divide-gray-200">
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-blue-50 transition-colors duration-150">
                 <TableHead>Date</TableHead>
                 <TableHead>Product</TableHead>
                 <TableHead>Quantity</TableHead>
@@ -206,12 +216,18 @@ export default function DamageReportsPage() {
                   <TableCell>
                     <div>
                       <div className="font-medium">{damage.products.name}</div>
-                      <div className="text-sm text-muted-foreground">{damage.products.sku}</div>
+                      <div className="text-xs text-gray-500">{damage.products.sku}</div>
                     </div>
                   </TableCell>
-                  <TableCell>{damage.quantity}</TableCell>
                   <TableCell>
-                    Rs{(damage.quantity * Number(damage.products.price)).toFixed(2)}
+                    <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                      {damage.quantity}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium text-red-700">
+                      Rs{(damage.quantity * Number(damage.products.price)).toFixed(2)}
+                    </span>
                   </TableCell>
                   <TableCell className="max-w-[200px] truncate" title={damage.reason}>
                     {damage.reason}
@@ -219,9 +235,13 @@ export default function DamageReportsPage() {
                 </TableRow>
               ))}
               {damages.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No damage reports found for the selected date range
+                <TableRow className="hover:bg-blue-50 transition-colors duration-150">
+                  <TableCell colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <AlertTriangle className="h-12 w-12 text-gray-400" />
+                      <p className="text-lg font-medium">No damage reports found</p>
+                      <p className="text-sm">No damages reported for the selected date range</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
@@ -229,7 +249,7 @@ export default function DamageReportsPage() {
           </Table>
           
           {damages.length > 0 && (
-            <div className="mt-4">
+            <div className="p-4 border-t">
               <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}

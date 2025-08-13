@@ -148,9 +148,6 @@ export default function CategoriesPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Categories</h1>
-          <p className="text-blue-100">
-            Organize your inventory with categories
-          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -207,10 +204,7 @@ export default function CategoriesPage() {
       </div>
 
       <Card className="border-0 shadow-xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
-          <CardTitle className="text-2xl font-bold text-indigo-800">Category List</CardTitle>
-          <p className="text-sm text-indigo-600">{categories.length} categories in total</p>
-        </CardHeader>
+       
         <CardContent className="p-0">
           {categories.length === 0 ? (
             <div className="px-6 py-12 text-center">

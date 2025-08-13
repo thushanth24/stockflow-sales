@@ -171,7 +171,6 @@ export default function ProductsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Products</h1>
-          <p className="text-blue-100">Manage your inventory products with ease</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -247,10 +246,7 @@ export default function ProductsPage() {
       </div>
 
       <Card className="border-0 shadow-xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
-          <CardTitle className="text-2xl font-bold text-indigo-800">Product List</CardTitle>
-          <p className="text-sm text-indigo-600">Showing {products.length} products in inventory</p>
-        </CardHeader>
+       
         <CardContent className="p-0">
           <Table className="divide-y divide-gray-200">
             <TableHeader className="bg-gray-50">

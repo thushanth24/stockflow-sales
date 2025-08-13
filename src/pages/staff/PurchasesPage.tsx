@@ -210,7 +210,6 @@ export default function PurchasesPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Purchase Management</h1>
-          <p className="text-blue-100">Log new stock arrivals and track purchase history</p>
         </div>
         <Button 
           className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-md transition-all hover:scale-105"
@@ -222,10 +221,7 @@ export default function PurchasesPage() {
       </div>
 
       <Card className="border-0 shadow-xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
-          <CardTitle className="text-2xl font-bold text-indigo-800">Log New Purchases</CardTitle>
-          <p className="text-sm text-indigo-600">Add new stock to your inventory</p>
-        </CardHeader>
+
         <CardContent className="p-6">
           <div className="space-y-6">
             <div className="bg-white p-4 rounded-lg border border-gray-200">
@@ -250,9 +246,7 @@ export default function PurchasesPage() {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Purchase Items</h3>
-                  <p className="text-sm text-gray-500">
-                    Enter quantities for products you want to add to inventory
-                  </p>
+                
                 </div>
                 <div className="w-full md:w-auto">
                   <Select value={selectedCategory} onValueChange={filterProductsByCategory}>

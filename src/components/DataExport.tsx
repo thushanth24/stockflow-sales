@@ -225,12 +225,7 @@ export function DataExport() {
           </Button>
         </div>
 
-        <div className="text-sm text-muted-foreground">
-          <p>• Export data for backup, analysis, or reporting purposes</p>
-          <p>• CSV format is compatible with Excel and Google Sheets</p>
-          <p>• JSON format preserves data types and is developer-friendly</p>
-          <p>• Date filtering applies where applicable</p>
-        </div>
+       
       </CardContent>
     </Card>
   );

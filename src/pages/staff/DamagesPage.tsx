@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2 } from 'lucide-react';
+import { Trash2, AlertTriangle, Plus, Loader2 } from 'lucide-react';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/PaginationControls';
 
@@ -171,122 +171,163 @@ export default function DamagesPage() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading damage reports...</span>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Report Damages</h1>
-        <p className="text-muted-foreground">Log damaged items for multiple products</p>
+    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">Damage Reports</h1>
+          <p className="text-blue-100">Log and track damaged inventory items</p>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Report Multiple Damages</CardTitle>
+      <Card className="border-0 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+          <CardTitle className="text-2xl font-bold text-indigo-800">Report Damages</CardTitle>
+          <p className="text-sm text-indigo-600">Log damaged inventory items and track losses</p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="damage_date">Damage Date</Label>
-              <Input
-                id="damage_date"
-                type="date"
-                value={damageDate}
-                onChange={(e) => setDamageDate(e.target.value)}
-                className="w-48"
-              />
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Damaged Items</h3>
-                <Button type="button" onClick={addDamageEntry} variant="outline">
+        <CardContent className="p-6">
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg border border-gray-200">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700">Damage Details</h3>
+                <p className="text-xs text-gray-500">
+                  {damageEntries.length} items to report
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col">
+                  <Label htmlFor="damage_date" className="text-xs text-gray-700 mb-1">Damage Date</Label>
+                  <Input
+                    id="damage_date"
+                    type="date"
+                    value={damageDate}
+                    onChange={(e) => setDamageDate(e.target.value)}
+                    className="w-48"
+                  />
+                </div>
+                <Button 
+                  type="button" 
+                  onClick={addDamageEntry} 
+                  variant="outline"
+                  className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
                   Add Product
                 </Button>
               </div>
+            </div>
+
+            <div className="space-y-4">
 
               {damageEntries.length > 0 && (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Current Stock</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Reason</TableHead>
-                      <TableHead className="w-12"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {damageEntries.map((entry, index) => {
-                      const selectedProduct = products.find(p => p.id === entry.product_id);
-                      return (
-                        <TableRow key={index}>
-                          <TableCell>
-                            <select
-                              className="w-full p-2 border rounded"
-                              value={entry.product_id}
-                              onChange={(e) => updateDamageEntry(index, 'product_id', e.target.value)}
-                            >
-                              <option value="">Select a product</option>
-                              {products.map((product) => (
-                                <option key={product.id} value={product.id}>
-                                  {product.name} ({product.sku})
-                                </option>
-                              ))}
-                            </select>
-                          </TableCell>
-                          <TableCell>
-                            {selectedProduct ? selectedProduct.current_stock : '-'}
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              min="1"
-                              value={entry.quantity || ''}
-                              onChange={(e) => updateDamageEntry(index, 'quantity', parseInt(e.target.value) || 0)}
-                              className="w-24"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Textarea
-                              value={entry.reason}
-                              onChange={(e) => updateDamageEntry(index, 'reason', e.target.value)}
-                              placeholder="Reason for damage"
-                              className="min-h-[60px]"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeDamageEntry(index)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <div className="rounded-lg border border-gray-200 overflow-hidden">
+                  <Table className="divide-y divide-gray-200">
+                    <TableHeader className="bg-gray-50">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
+                        <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Current</TableHead>
+                        <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Quantity</TableHead>
+                        <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Reason</TableHead>
+                        <TableHead className="px-6 py-4 text-right"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="bg-white divide-y divide-gray-200">
+                      {damageEntries.map((entry, index) => {
+                        const selectedProduct = products.find(p => p.id === entry.product_id);
+                        return (
+                          <TableRow key={index} className="hover:bg-blue-50 transition-colors duration-150">
+                            <TableCell>
+                              <select
+                                className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                                value={entry.product_id}
+                                onChange={(e) => updateDamageEntry(index, 'product_id', e.target.value)}
+                              >
+                                <option value="">Select a product</option>
+                                {products.map((product) => (
+                                  <option key={product.id} value={product.id}>
+                                    {product.name} ({product.sku})
+                                  </option>
+                                ))}
+                              </select>
+                            </TableCell>
+                            <TableCell className="px-6 py-4 whitespace-nowrap text-right">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                (selectedProduct?.current_stock || 0) > 10 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                                {selectedProduct?.current_stock || 0} in stock
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={entry.quantity || ''}
+                                onChange={(e) => updateDamageEntry(index, 'quantity', parseInt(e.target.value) || 0)}
+                                className="w-24 text-right"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Textarea
+                                value={entry.reason}
+                                onChange={(e) => updateDamageEntry(index, 'reason', e.target.value)}
+                                placeholder="Enter reason for damage..."
+                                className="min-h-[60px] text-sm"
+                                rows={2}
+                              />
+                            </TableCell>
+                            <TableCell className="px-6 py-4 whitespace-nowrap text-right">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeDamageEntry(index)}
+                                className="text-red-600 hover:text-white hover:bg-red-600 border-red-200 hover:border-red-600 transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
 
               {damageEntries.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No damage entries added yet. Click "Add Product" to start.
+                <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
+                  <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-lg font-medium text-gray-900">No damage entries</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Add a product to report damage
+                  </p>
                 </div>
               )}
 
               {damageEntries.length > 0 && (
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-4 border-t border-gray-100">
                   <Button 
                     onClick={handleSubmit} 
                     disabled={submitting}
                     size="lg"
+                    className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md transition-all hover:scale-105"
                   >
-                    {submitting ? 'Submitting Reports...' : 'Submit All Damage Reports'}
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit Damage Reports'
+                    )}
                   </Button>
                 </div>
               )}
@@ -295,42 +336,57 @@ export default function DamagesPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Damage Reports</CardTitle>
+      <Card className="border-0 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+          <CardTitle className="text-2xl font-bold text-gray-800">Recent Damage Reports</CardTitle>
+          <p className="text-sm text-gray-600">View and track previously reported damages</p>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Date</TableHead>
+        <CardContent className="p-0">
+          <Table className="divide-y divide-gray-200">
+            <TableHeader className="bg-gray-50">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
+                <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Qty</TableHead>
+                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Reason</TableHead>
+                <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedDamages.map((damage) => (
-                <TableRow key={damage.id}>
-                  <TableCell>
-                    {damage.products.name}
-                    <div className="text-sm text-muted-foreground">
+                <TableRow key={damage.id} className="hover:bg-blue-50 transition-colors duration-150">
+                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{damage.products.name}</div>
+                    <div className="text-xs text-gray-500">
                       {damage.products.sku}
                     </div>
                   </TableCell>
-                  <TableCell>{damage.quantity}</TableCell>
-                  <TableCell className="max-w-[200px] truncate" title={damage.reason}>
-                    {damage.reason}
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-right">
+                    <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                      {damage.quantity}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <div className="text-sm text-gray-900 line-clamp-2" title={damage.reason}>
+                      {damage.reason}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    {new Date(damage.damage_date).toLocaleDateString()}
+                    {new Date(damage.damage_date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
                   </TableCell>
                 </TableRow>
               ))}
               {damages.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No damage reports yet
+                  <TableCell colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <AlertTriangle className="h-12 w-12 text-gray-400" />
+                      <p className="text-lg font-medium">No damage reports found</p>
+                      <p className="text-sm">Report your first damage to get started</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
@@ -338,14 +394,30 @@ export default function DamagesPage() {
           </Table>
           
           {damages.length > 0 && (
-            <div className="mt-4">
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={goToPage}
-                canGoNext={canGoNext}
-                canGoPrevious={canGoPrevious}
-              />
+            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 border-t">
+              <div className="text-sm text-gray-600 font-medium">
+                Showing page {currentPage} of {totalPages} • {damages.length} total reports
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={!canGoPrevious}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={!canGoNext}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

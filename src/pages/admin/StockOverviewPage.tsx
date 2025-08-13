@@ -108,35 +108,42 @@ export default function StockOverviewPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Stock Overview</h1>
-        <p className="text-muted-foreground">Monitor inventory levels and stock movements</p>
+    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">Stock Overview</h1>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-full bg-purple-100 text-purple-600">
+              <Package className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{products.length}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-full bg-amber-100 text-amber-600">
+              <TrendingDown className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{lowStockProducts.length}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 rounded-full bg-red-100 text-red-600">
+              <AlertTriangle className="h-4 w-4" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{outOfStockProducts.length}</div>
@@ -145,14 +152,14 @@ export default function StockOverviewPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Stock Levels</CardTitle>
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+            <CardTitle className="text-xl font-bold text-indigo-800">Current Stock Levels</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <Table className="divide-y divide-gray-200">
               <TableHeader>
-                <TableRow>
+                <TableRow className="hover:bg-blue-50 transition-colors duration-150">
                   <TableHead>Product</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Stock</TableHead>
@@ -168,13 +175,22 @@ export default function StockOverviewPage() {
                       <TableCell>{product.sku}</TableCell>
                       <TableCell>{product.current_stock}</TableCell>
                       <TableCell>
-                        <Badge variant={status.variant}>{status.label}</Badge>
+                        <Badge 
+                        variant={status.variant} 
+                        className={`px-2.5 py-0.5 text-xs font-medium ${
+                          status.variant === 'destructive' ? 'bg-red-100 text-red-800' : 
+                          status.variant === 'secondary' ? 'bg-amber-100 text-amber-800' :
+                          'bg-green-100 text-green-800'
+                        }`}
+                      >
+                        {status.label}
+                      </Badge>
                       </TableCell>
                     </TableRow>
                   );
                 })}
                 {products.length === 0 && (
-                  <TableRow>
+                  <TableRow className="hover:bg-blue-50 transition-colors duration-150">
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
                       No products found
                     </TableCell>
@@ -184,7 +200,7 @@ export default function StockOverviewPage() {
             </Table>
             
             {products.length > 0 && (
-              <div className="mt-4">
+              <div className="p-4 border-t">
                 <PaginationControls
                   currentPage={productsCurrentPage}
                   totalPages={productsTotalPages}
@@ -197,14 +213,14 @@ export default function StockOverviewPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Stock Updates</CardTitle>
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+            <CardTitle className="text-xl font-bold text-indigo-800">Recent Stock Updates</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <Table className="divide-y divide-gray-200">
               <TableHeader>
-                <TableRow>
+                <TableRow className="hover:bg-blue-50 transition-colors duration-150">
                   <TableHead>Product</TableHead>
                   <TableHead>From</TableHead>
                   <TableHead>To</TableHead>
@@ -217,7 +233,7 @@ export default function StockOverviewPage() {
                     <TableCell>
                       <div>
                         <div className="font-medium">{update.products.name}</div>
-                        <div className="text-sm text-muted-foreground">{update.products.sku}</div>
+                        <div className="text-xs text-gray-500">{update.products.sku}</div>
                       </div>
                     </TableCell>
                     <TableCell>{update.previous_stock}</TableCell>
@@ -228,9 +244,13 @@ export default function StockOverviewPage() {
                   </TableRow>
                 ))}
                 {recentUpdates.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No stock updates found
+                  <TableRow className="hover:bg-blue-50 transition-colors duration-150">
+                    <TableCell colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <AlertTriangle className="h-12 w-12 text-gray-400" />
+                        <p className="text-lg font-medium">No stock updates found</p>
+                        <p className="text-sm">Stock updates will appear here</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
@@ -238,7 +258,7 @@ export default function StockOverviewPage() {
             </Table>
             
             {recentUpdates.length > 0 && (
-              <div className="mt-4">
+              <div className="p-4 border-t">
                 <PaginationControls
                   currentPage={updatesCurrentPage}
                   totalPages={updatesTotalPages}
