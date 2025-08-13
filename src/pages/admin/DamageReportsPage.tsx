@@ -168,7 +168,7 @@ export default function DamageReportsPage() {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">Rs{stats.totalValue.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -195,7 +195,6 @@ export default function DamageReportsPage() {
                 <TableHead>Quantity</TableHead>
                 <TableHead>Value</TableHead>
                 <TableHead>Reason</TableHead>
-                  <TableHead>Reported By</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -212,15 +211,10 @@ export default function DamageReportsPage() {
                   </TableCell>
                   <TableCell>{damage.quantity}</TableCell>
                   <TableCell>
-                    ${(damage.quantity * Number(damage.products.price)).toFixed(2)}
+                    Rs{(damage.quantity * Number(damage.products.price)).toFixed(2)}
                   </TableCell>
                   <TableCell className="max-w-[200px] truncate" title={damage.reason}>
                     {damage.reason}
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-muted-foreground">
-                      User ID: {damage.created_by}
-                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -172,7 +172,7 @@ export default function ReportsPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">Rs{stats.totalRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -228,7 +228,7 @@ export default function ReportsPage() {
                   <TableCell className="font-medium">{sale.products.name}</TableCell>
                   <TableCell>{sale.products.sku}</TableCell>
                   <TableCell>{sale.quantity}</TableCell>
-                  <TableCell>${Number(sale.revenue).toFixed(2)}</TableCell>
+                  <TableCell>Rs{Number(sale.revenue).toFixed(2)}</TableCell>
                 </TableRow>
               ))}
               {sales.length === 0 && (

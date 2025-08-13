@@ -154,7 +154,7 @@ export default function StockUpdatePage() {
 
       toast({
         title: 'Success',
-        description: `Stock updated successfully. ${stockUpdateRecords.length} products had changes. Sales calculated automatically.`,
+        description: `Stock updated successfully. Rs{stockUpdateRecords.length} products had changes. Sales calculated automatically.`,
       });
 
       fetchProducts(); // Refresh to show updated stock

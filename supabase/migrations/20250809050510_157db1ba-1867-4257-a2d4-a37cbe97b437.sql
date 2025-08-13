@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION public.archive_old_stock_updates()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS $$
+AS RsRs
 DECLARE
   cutoff_date DATE := CURRENT_DATE - INTERVAL '1 year';
   rows_moved INTEGER;
@@ -26,7 +26,7 @@ BEGIN
   
   RAISE NOTICE 'Archived % stock update records older than %', rows_moved, cutoff_date;
 END;
-$$;
+RsRs;
 
 -- Create a scheduled function call (you could set this up as a cron job)
 COMMENT ON FUNCTION public.archive_old_stock_updates() IS 'Archives stock update records older than 1 year to reduce table size';

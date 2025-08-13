@@ -125,7 +125,7 @@ export default function Dashboard() {
               </CardHeader>
                <CardContent>
                  <div className="text-2xl font-bold">
-                   {loading ? '$--' : `$${stats.totalSales.toFixed(2)}`}
+                   {loading ? 'Rs--' : `RsRs{stats.totalSales.toFixed(2)}`}
                  </div>
                  <p className="text-xs text-muted-foreground">
                    This month

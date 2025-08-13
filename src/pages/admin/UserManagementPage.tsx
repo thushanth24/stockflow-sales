@@ -141,7 +141,7 @@ export default function UserManagementPage() {
       if (targetLevel > currentLevel) {
         toast({
           title: 'Access Denied',
-          description: `You cannot assign a role higher than your own (${currentUserRole})`,
+          description: `You cannot assign a role higher than your own (Rs{currentUserRole})`,
           variant: 'destructive',
         });
         return;
@@ -208,7 +208,7 @@ export default function UserManagementPage() {
 
       toast({
         title: 'Success',
-        description: `User ${!isActive ? 'activated' : 'deactivated'} successfully`,
+        description: `User Rs{!isActive ? 'activated' : 'deactivated'} successfully`,
       });
 
       fetchUsers();
@@ -319,7 +319,7 @@ export default function UserManagementPage() {
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
                     minLength={8}
-                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@Rs!%*?&])[A-Za-z\d@Rs!%*?&]{8,}Rs"
                     title="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
                   />
                 </div>

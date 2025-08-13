@@ -154,7 +154,7 @@ export default function DamagesPage() {
 
       toast({
         title: 'Success',
-        description: `${validEntries.length} damage report(s) submitted successfully`,
+        description: `Rs{validEntries.length} damage report(s) submitted successfully`,
       });
 
       setDamageEntries([]);

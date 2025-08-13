@@ -2,7 +2,7 @@
 ALTER TABLE public.stock_updates_archive ENABLE ROW LEVEL SECURITY;
 
 -- Optional: allow only super_admins to view archive data
-DO $$
+DO RsRs
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies 
@@ -15,7 +15,7 @@ BEGIN
     FOR SELECT
     USING (public.get_user_role(auth.uid()) = 'super_admin'::user_role);
   END IF;
-END $$;
+END RsRs;
 
 -- Recreate archive function with fixed search_path
 CREATE OR REPLACE FUNCTION public.archive_old_stock_updates()
@@ -23,7 +23,7 @@ RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS RsRs
 DECLARE
   cutoff_date DATE := CURRENT_DATE - INTERVAL '1 year';
   rows_moved INTEGER;
@@ -41,4 +41,4 @@ BEGIN
   
   RAISE NOTICE 'Archived % stock update records older than %', rows_moved, cutoff_date;
 END;
-$$;
+RsRs;

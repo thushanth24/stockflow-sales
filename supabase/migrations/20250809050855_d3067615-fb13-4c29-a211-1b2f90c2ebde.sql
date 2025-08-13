@@ -7,9 +7,9 @@ RETURNS user_role
 LANGUAGE sql
 STABLE SECURITY DEFINER
 SET search_path = 'public'
-AS $function$
+AS RsfunctionRs
   SELECT role FROM public.profiles WHERE id = user_id;
-$function$;
+RsfunctionRs;
 
 -- Fix handle_new_user function  
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -17,7 +17,7 @@ RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = 'public'
-AS $function$
+AS RsfunctionRs
 BEGIN
   INSERT INTO public.profiles (id, email, full_name, role)
   VALUES (
@@ -28,7 +28,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$function$;
+RsfunctionRs;
 
 -- Fix calculate_sales_for_product function
 CREATE OR REPLACE FUNCTION public.calculate_sales_for_product(p_product_id uuid, p_update_date date)
@@ -36,7 +36,7 @@ RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = 'public'
-AS $function$
+AS RsfunctionRs
 DECLARE
   v_previous_stock INTEGER;
   v_actual_stock INTEGER;
@@ -78,7 +78,7 @@ BEGIN
     ON CONFLICT DO NOTHING;
   END IF;
 END;
-$function$;
+RsfunctionRs;
 
 -- Fix trigger_calculate_sales function
 CREATE OR REPLACE FUNCTION public.trigger_calculate_sales()
@@ -86,7 +86,7 @@ RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = 'public'
-AS $function$
+AS RsfunctionRs
 BEGIN
   -- Calculate sales when a stock update is inserted
   PERFORM public.calculate_sales_for_product(NEW.product_id, NEW.update_date);
@@ -98,23 +98,23 @@ BEGIN
   
   RETURN NEW;
 END;
-$function$;
+RsfunctionRs;
 
 -- Fix update_updated_at_column function
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS trigger
 LANGUAGE plpgsql
 SET search_path = 'public'
-AS $function$
+AS RsfunctionRs
 BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$function$;
+RsfunctionRs;
 
 -- Phase 1: Enhanced RLS policies for role security
 -- Add policy to prevent users from escalating their own role
-DO $$
+DO RsRs
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies 
@@ -130,7 +130,7 @@ BEGIN
       (auth.uid() = id AND (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('admin', 'super_admin'))
     );
   END IF;
-END $$;
+END RsRs;
 
 -- Add audit logging table for role changes
 CREATE TABLE IF NOT EXISTS public.role_change_audit (
@@ -158,7 +158,7 @@ RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = 'public'
-AS $function$
+AS RsfunctionRs
 BEGIN
   -- Only log if role actually changed
   IF OLD.role != NEW.role THEN
@@ -167,7 +167,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$function$;
+RsfunctionRs;
 
 -- Create trigger for role change logging
 DROP TRIGGER IF EXISTS role_change_audit_trigger ON public.profiles;

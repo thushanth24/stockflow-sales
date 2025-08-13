@@ -40,7 +40,7 @@ export function Header() {
       
       <div className="flex items-center gap-4">
         {profile && (
-          <div className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(profile.role)}`}>
+          <div className={`px-2 py-1 rounded-full text-xs font-medium Rs{getRoleColor(profile.role)}`}>
             {formatRole(profile.role)}
           </div>
         )}

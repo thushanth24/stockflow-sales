@@ -45,7 +45,7 @@ export function DataExport() {
           const value = row[header];
           // Escape quotes and wrap in quotes if contains comma, quote, or newline
           if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-            return `"${value.replace(/"/g, '""')}"`;
+            return `"Rs{value.replace(/"/g, '""')}"`;
           }
           return value || '';
         }).join(',')
@@ -115,7 +115,7 @@ export function DataExport() {
         return;
       }
 
-      const filename = `${options.table}_${options.dateFrom}_to_${options.dateTo}.${options.format}`;
+      const filename = `Rs{options.table}_Rs{options.dateFrom}_to_Rs{options.dateTo}.Rs{options.format}`;
 
       if (options.format === 'csv') {
         downloadCSV(data, filename);
@@ -125,7 +125,7 @@ export function DataExport() {
 
       toast({
         title: 'Export Successful',
-        description: `Exported ${data.length} records as ${options.format.toUpperCase()}`,
+        description: `Exported Rs{data.length} records as Rs{options.format.toUpperCase()}`,
       });
     } catch (error: any) {
       console.error('Export error:', error);

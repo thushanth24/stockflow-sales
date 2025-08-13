@@ -49,8 +49,8 @@ export default function AuditLogsPage() {
       const { data: logsData, error: logsError } = await supabase
         .from('role_change_audit')
         .select('*')
-        .gte('changed_at', `${dateRange.from}T00:00:00`)
-        .lte('changed_at', `${dateRange.to}T23:59:59`)
+        .gte('changed_at', `Rs{dateRange.from}T00:00:00`)
+        .lte('changed_at', `Rs{dateRange.to}T23:59:59`)
         .order('changed_at', { ascending: false });
 
       if (logsError) throw logsError;

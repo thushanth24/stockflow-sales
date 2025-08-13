@@ -186,7 +186,7 @@ export default function PurchasesPage() {
 
       toast({
         title: 'Success',
-        description: `${validEntries.length} purchase(s) logged successfully`,
+        description: `Rs{validEntries.length} purchase(s) logged successfully`,
       });
 
       setPurchaseEntries([]);

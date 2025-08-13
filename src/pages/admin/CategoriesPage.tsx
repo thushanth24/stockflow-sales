@@ -231,9 +231,7 @@ export default function CategoriesPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Description</TableHead>
                     <TableHead>Products</TableHead>
-                    <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -244,19 +242,9 @@ export default function CategoriesPage() {
                         {category.name}
                       </TableCell>
                       <TableCell>
-                        {category.description || (
-                          <span className="text-muted-foreground">
-                            No description
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
                         <Badge variant="secondary">
                           {category.product_count} products
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(category.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button

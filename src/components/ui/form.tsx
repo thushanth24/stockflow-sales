@@ -55,9 +55,9 @@ const useFormField = () => {
   return {
     id,
     name: fieldContext.name,
-    formItemId: `${id}-form-item`,
-    formDescriptionId: `${id}-form-item-description`,
-    formMessageId: `${id}-form-item-message`,
+    formItemId: `Rs{id}-form-item`,
+    formDescriptionId: `Rs{id}-form-item-description`,
+    formMessageId: `Rs{id}-form-item-message`,
     ...fieldState,
   }
 }
@@ -113,8 +113,8 @@ const FormControl = React.forwardRef<
       id={formItemId}
       aria-describedby={
         !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
+          ? `Rs{formDescriptionId}`
+          : `Rs{formDescriptionId} Rs{formMessageId}`
       }
       aria-invalid={!!error}
       {...props}

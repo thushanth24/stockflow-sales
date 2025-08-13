@@ -252,7 +252,6 @@ export default function ProductsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>SKU</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
@@ -263,13 +262,12 @@ export default function ProductsPage() {
               {paginatedProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.sku}</TableCell>
                   <TableCell>
                     {product.categories?.name || (
                       <span className="text-muted-foreground">No category</span>
                     )}
                   </TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>Rs{product.price.toFixed(2)}</TableCell>
                   <TableCell>{product.current_stock}</TableCell>
                   <TableCell>
                     <Button

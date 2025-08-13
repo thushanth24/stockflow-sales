@@ -81,9 +81,9 @@ RETURNS user_role
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-AS $$
+AS RsRs
   SELECT role FROM public.profiles WHERE id = user_id;
-$$;
+RsRs;
 
 -- RLS Policies for profiles
 CREATE POLICY "Users can view their own profile" ON public.profiles
@@ -141,7 +141,7 @@ CREATE OR REPLACE FUNCTION public.calculate_sales_for_product(
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS $$
+AS RsRs
 DECLARE
   v_previous_stock INTEGER;
   v_actual_stock INTEGER;
@@ -183,14 +183,14 @@ BEGIN
     ON CONFLICT DO NOTHING;
   END IF;
 END;
-$$;
+RsRs;
 
 -- Create trigger function for automatic sales calculation
 CREATE OR REPLACE FUNCTION public.trigger_calculate_sales()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS $$
+AS RsRs
 BEGIN
   -- Calculate sales when a stock update is inserted
   PERFORM public.calculate_sales_for_product(NEW.product_id, NEW.update_date);
@@ -202,7 +202,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$;
+RsRs;
 
 -- Create trigger for automatic sales calculation
 CREATE TRIGGER trigger_stock_update_calculate_sales
@@ -215,7 +215,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS $$
+AS RsRs
 BEGIN
   INSERT INTO public.profiles (id, email, full_name, role)
   VALUES (
@@ -226,7 +226,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$;
+RsRs;
 
 -- Create trigger for new user registration
 CREATE TRIGGER on_auth_user_created
@@ -236,12 +236,12 @@ CREATE TRIGGER on_auth_user_created
 
 -- Create function to update timestamps
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS RsRs
 BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+RsRs LANGUAGE plpgsql;
 
 -- Create triggers for updating timestamps
 CREATE TRIGGER update_profiles_updated_at
