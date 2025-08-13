@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/PaginationControls';
+import { Package } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -154,7 +155,7 @@ export default function StockUpdatePage() {
 
       toast({
         title: 'Success',
-        description: `Stock updated successfully. Rs{stockUpdateRecords.length} products had changes. Sales calculated automatically.`,
+        description: `Stock updated successfully. ${stockUpdateRecords.length} products had changes. Sales calculated automatically.`,
       });
 
       fetchProducts(); // Refresh to show updated stock
@@ -170,129 +171,251 @@ export default function StockUpdatePage() {
   };
 
   if (loading) {
-    return <div>Loading products...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Daily Stock Update</h1>
-        <p className="text-muted-foreground">
-          Update actual stock counts to calculate daily sales
+    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+        <h1 className="text-4xl font-bold tracking-tight">Daily Stock Update</h1>
+        <p className="text-blue-100 mt-2">
+          Update actual stock counts to calculate daily sales accurately
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Stock Count Update</CardTitle>
+      <Card className="border-0 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+          <CardTitle className="text-2xl font-bold text-indigo-800">Stock Count Update</CardTitle>
+          <p className="text-sm text-indigo-600">Update product stock levels and track inventory changes</p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-muted-foreground">
-                Enter actual stock counts for accurate sales calculation
-              </p>
-              <Select value={selectedCategory} onValueChange={filterProductsByCategory}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <CardContent className="p-6">
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg border border-gray-200">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700">Filter Products</h3>
+                <p className="text-xs text-gray-500">
+                  {filteredProducts.length} products found
+                </p>
+              </div>
+              <div className="w-full sm:w-64">
+                <Select value={selectedCategory} onValueChange={filterProductsByCategory}>
+                  <SelectTrigger className="w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+                    <SelectValue placeholder="Filter by category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="focus:bg-blue-50">All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem 
+                        key={category.id} 
+                        value={category.id}
+                        className="focus:bg-blue-50"
+                      >
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Current Stock</TableHead>
-                  <TableHead>Actual Count</TableHead>
+            <div className="rounded-lg border border-gray-200 overflow-hidden">
+              <Table>
+              <TableHeader className="bg-gray-50">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">SKU</TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</TableHead>
+                  <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Current</TableHead>
+                  <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actual Count</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="bg-white divide-y divide-gray-200">
                 {paginatedProducts.map((product) => {
                   const stockUpdate = stockUpdates.find(u => u.product_id === product.id);
+                  const hasChanges = stockUpdate && stockUpdate.actual_stock !== product.current_stock;
+                  
                   return (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>{product.sku}</TableCell>
-                      <TableCell>
-                        {product.categories?.name || (
-                          <span className="text-muted-foreground">No category</span>
+                    <TableRow 
+                      key={product.id}
+                      className={`${hasChanges ? 'bg-yellow-50' : 'hover:bg-gray-50'} transition-colors duration-150`}
+                    >
+                      <TableCell className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {product.sku}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                          {product.sku}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap">
+                        {product.categories?.name ? (
+                          <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded">
+                            {product.categories.name}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-500">-</span>
                         )}
                       </TableCell>
-                      <TableCell>{product.current_stock}</TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={stockUpdate?.actual_stock || 0}
-                          onChange={(e) => updateStockCount(
-                            product.id,
-                            parseInt(e.target.value) || 0
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-right">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          product.current_stock > 10 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {product.current_stock}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Input
+                            type="number"
+                            min="0"
+                            value={stockUpdate?.actual_stock || 0}
+                            onChange={(e) => updateStockCount(
+                              product.id,
+                              parseInt(e.target.value) || 0
+                            )}
+                            className={`w-32 text-right border-gray-300 focus:ring-blue-500 focus:border-blue-500 ${
+                              hasChanges ? 'border-yellow-500 bg-yellow-50' : ''
+                            }`}
+                          />
+                          {hasChanges && (
+                            <span className="text-xs text-yellow-600">
+                              {stockUpdate.actual_stock > product.current_stock ? '↑' : '↓'} 
+                              {Math.abs(stockUpdate.actual_stock - product.current_stock)}
+                            </span>
                           )}
-                          className="w-24"
-                        />
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
                 })}
                 {filteredProducts.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      {selectedCategory ? "No products in this category" : "No products found. Add products first."}
+                    <TableCell colSpan={5} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <Package className="h-12 w-12 text-gray-400" />
+                        <h3 className="text-lg font-medium text-gray-700">
+                          {selectedCategory === 'all' 
+                            ? 'No products found' 
+                            : 'No products in this category'}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {selectedCategory === 'all'
+                            ? 'Add products to get started with stock updates.'
+                            : 'Try selecting a different category.'}
+                        </p>
+                        {selectedCategory !== 'all' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => filterProductsByCategory('all')}
+                            className="mt-2"
+                          >
+                            Show All Products
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
+          </div>
             
             {filteredProducts.length > 0 && (
-              <div className="mt-4">
-                <PaginationControls
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={goToPage}
-                  canGoNext={canGoNext}
-                  canGoPrevious={canGoPrevious}
-                />
-              </div>
-            )}
-
-            {products.length > 0 && (
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={submitting}
-                  size="lg"
-                >
-                  {submitting ? 'Updating Stock...' : 'Update All Stock Counts'}
-                </Button>
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="text-sm text-gray-600">
+                    Showing {paginatedProducts.length} of {filteredProducts.length} products
+                  </div>
+                  
+                  <div className="flex items-center space-x-4">
+                    <Button 
+                      onClick={handleSubmit} 
+                      disabled={submitting || !stockUpdates.some(update => {
+                        const product = products.find(p => p.id === update.product_id);
+                        return product && product.current_stock !== update.actual_stock;
+                      })}
+                      className={`bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-md transition-all hover:scale-105 ${
+                        submitting ? 'opacity-70 cursor-not-allowed' : ''
+                      }`}
+                      size="lg"
+                    >
+                      {submitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Updating...
+                        </>
+                      ) : (
+                        'Update All Stock Counts'
+                      )}
+                    </Button>
+                    
+                    <div className="mt-6">
+                      <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={goToPage}
+                        canGoNext={canGoNext}
+                        canGoPrevious={canGoPrevious}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>How It Works</CardTitle>
+      <Card className="border-0 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+          <CardTitle className="text-2xl font-bold text-indigo-800">How It Works</CardTitle>
+          <p className="text-sm text-indigo-600">Understanding stock updates and sales calculation</p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p>• Enter the actual count of each product at the end of the day</p>
-            <p>• The system will automatically calculate sales using the formula:</p>
-            <p className="font-mono bg-muted p-2 rounded">
-              Sales = (Previous Stock + Purchases) - (Current Stock + Damages)
-            </p>
-            <p>• This ensures accurate sales tracking without manual entry</p>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+              <h4 className="font-medium text-blue-800 mb-2">Stock Update Process</h4>
+              <ul className="space-y-2 text-sm text-blue-700">
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Enter the actual count of each product at the end of the day</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Highlighted rows show changes from current stock</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Click "Update All Stock Counts" to save your changes</span>
+                </li>
+              </ul>
+            </div>
+            
+            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+              <h4 className="font-medium text-green-800 mb-2">Sales Calculation</h4>
+              <p className="text-sm text-green-700 mb-3">
+                The system automatically calculates sales using this formula:
+              </p>
+              <div className="bg-white p-3 rounded border border-green-100 font-mono text-sm text-green-800">
+                <div className="text-center mb-1 font-medium">Sales Calculation</div>
+                <div className="text-center">
+                  <div>Sales = (Previous Stock + Purchases) - (Current Stock + Damages)</div>
+                  <div className="text-xs text-green-600 mt-1">
+                    Ensures accurate tracking without manual entry
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

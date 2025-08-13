@@ -167,22 +167,25 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
         <div>
-          <h1 className="text-3xl font-bold">Products</h1>
-          <p className="text-muted-foreground">Manage your inventory products</p>
+          <h1 className="text-4xl font-bold tracking-tight">Products</h1>
+          <p className="text-blue-100">Manage your inventory products with ease</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={openCreateDialog}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Product
+            <Button 
+              onClick={openCreateDialog}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-md transition-all hover:scale-105"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Add New Product
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[500px] rounded-xl border-0 shadow-2xl bg-gradient-to-b from-white to-gray-50">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {editingProduct ? 'Edit Product' : 'Add New Product'}
               </DialogTitle>
             </DialogHeader>
@@ -243,47 +246,69 @@ export default function ProductsPage() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Product List</CardTitle>
+      <Card className="border-0 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+          <CardTitle className="text-2xl font-bold text-indigo-800">Product List</CardTitle>
+          <p className="text-sm text-indigo-600">Showing {products.length} products in inventory</p>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Actions</TableHead>
+        <CardContent className="p-0">
+          <Table className="divide-y divide-gray-200">
+            <TableHeader className="bg-gray-50">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</TableHead>
+                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Price</TableHead>
+                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Stock</TableHead>
+                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</TableHead>
+                <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="bg-white divide-y divide-gray-200">
               {paginatedProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>
-                    {product.categories?.name || (
-                      <span className="text-muted-foreground">No category</span>
-                    )}
+                <TableRow 
+                  key={product.id}
+                  className="hover:bg-blue-50 transition-colors duration-150"
+                >
+                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{product.name}</div>
                   </TableCell>
-                  <TableCell>Rs{product.price.toFixed(2)}</TableCell>
-                  <TableCell>{product.current_stock}</TableCell>
-                  <TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                    Rs{product.price.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      product.current_stock > 10 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {product.current_stock} in stock
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                      {product.categories?.name || 'Uncategorized'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => openEditDialog(product)}
+                      className="text-blue-600 hover:text-white hover:bg-blue-600 border-blue-200 hover:border-blue-600 transition-colors"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
               {products.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No products found. Add your first product to get started.
+                  <TableCell colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4.5L4 7m16 0l-8 4.5M4 7v9.5l8 4.5m0-14l8 4.5M4 16.5l8 4.5m8-4.5l-8-4.5m8 4.5V7" />
+                      </svg>
+                      <p className="text-lg font-medium">No products found</p>
+                      <p className="text-sm">Add your first product to get started</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
@@ -291,14 +316,30 @@ export default function ProductsPage() {
           </Table>
           
           {products.length > 0 && (
-            <div className="mt-4">
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={goToPage}
-                canGoNext={canGoNext}
-                canGoPrevious={canGoPrevious}
-              />
+            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 border-t">
+              <div className="text-sm text-gray-600 font-medium">
+                Showing page {currentPage} of {totalPages} • {products.length} total products
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={!canGoPrevious}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={!canGoNext}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
