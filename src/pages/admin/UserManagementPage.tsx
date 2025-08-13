@@ -12,6 +12,8 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole, useAuth } from '@/hooks/useAuth';
 import { Users, UserPlus, Edit } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/PaginationControls';
 
 interface UserProfile {
   id: string;
@@ -36,6 +38,15 @@ export default function UserManagementPage() {
   });
   const { toast } = useToast();
   const { profile } = useAuth();
+
+  const {
+    currentData: paginatedUsers,
+    currentPage,
+    totalPages,
+    goToPage,
+    canGoNext,
+    canGoPrevious,
+  } = usePagination({ data: users, itemsPerPage: 10 });
 
   useEffect(() => {
     fetchUsers();
@@ -341,7 +352,7 @@ export default function UserManagementPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {paginatedUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.full_name}</TableCell>
                   <TableCell>{user.email}</TableCell>
@@ -384,6 +395,18 @@ export default function UserManagementPage() {
               )}
             </TableBody>
           </Table>
+          
+          {users.length > 0 && (
+            <div className="mt-4">
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                canGoNext={canGoNext}
+                canGoPrevious={canGoPrevious}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

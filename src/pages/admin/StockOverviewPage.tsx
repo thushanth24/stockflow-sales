@@ -5,6 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Package, AlertTriangle, TrendingDown } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/PaginationControls';
 
 interface ProductWithStock {
   id: string;
@@ -31,6 +33,24 @@ export default function StockOverviewPage() {
   const [recentUpdates, setRecentUpdates] = useState<StockUpdateWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  const {
+    currentData: paginatedProducts,
+    currentPage: productsCurrentPage,
+    totalPages: productsTotalPages,
+    goToPage: goToProductsPage,
+    canGoNext: productsCanGoNext,
+    canGoPrevious: productsCanGoPrevious,
+  } = usePagination({ data: products, itemsPerPage: 10 });
+
+  const {
+    currentData: paginatedUpdates,
+    currentPage: updatesCurrentPage,
+    totalPages: updatesTotalPages,
+    goToPage: goToUpdatesPage,
+    canGoNext: updatesCanGoNext,
+    canGoPrevious: updatesCanGoPrevious,
+  } = usePagination({ data: recentUpdates, itemsPerPage: 10 });
 
   useEffect(() => {
     fetchStockData();
@@ -140,7 +160,7 @@ export default function StockOverviewPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((product) => {
+                {paginatedProducts.map((product) => {
                   const status = getStockStatus(product.current_stock);
                   return (
                     <TableRow key={product.id}>
@@ -162,6 +182,18 @@ export default function StockOverviewPage() {
                 )}
               </TableBody>
             </Table>
+            
+            {products.length > 0 && (
+              <div className="mt-4">
+                <PaginationControls
+                  currentPage={productsCurrentPage}
+                  totalPages={productsTotalPages}
+                  onPageChange={goToProductsPage}
+                  canGoNext={productsCanGoNext}
+                  canGoPrevious={productsCanGoPrevious}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -180,7 +212,7 @@ export default function StockOverviewPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentUpdates.map((update) => (
+                {paginatedUpdates.map((update) => (
                   <TableRow key={update.id}>
                     <TableCell>
                       <div>
@@ -204,6 +236,18 @@ export default function StockOverviewPage() {
                 )}
               </TableBody>
             </Table>
+            
+            {recentUpdates.length > 0 && (
+              <div className="mt-4">
+                <PaginationControls
+                  currentPage={updatesCurrentPage}
+                  totalPages={updatesTotalPages}
+                  onPageChange={goToUpdatesPage}
+                  canGoNext={updatesCanGoNext}
+                  canGoPrevious={updatesCanGoPrevious}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/PaginationControls';
 
 interface Product {
   id: string;
@@ -40,6 +42,15 @@ export default function StockUpdatePage() {
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const {
+    currentData: paginatedProducts,
+    currentPage,
+    totalPages,
+    goToPage,
+    canGoNext,
+    canGoPrevious,
+  } = usePagination({ data: filteredProducts, itemsPerPage: 15 });
 
   useEffect(() => {
     fetchProducts();
@@ -206,7 +217,7 @@ export default function StockUpdatePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.map((product) => {
+                {paginatedProducts.map((product) => {
                   const stockUpdate = stockUpdates.find(u => u.product_id === product.id);
                   return (
                     <TableRow key={product.id}>
@@ -242,6 +253,18 @@ export default function StockUpdatePage() {
                 )}
               </TableBody>
             </Table>
+            
+            {filteredProducts.length > 0 && (
+              <div className="mt-4">
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={goToPage}
+                  canGoNext={canGoNext}
+                  canGoPrevious={canGoPrevious}
+                />
+              </div>
+            )}
 
             {products.length > 0 && (
               <div className="flex justify-end">

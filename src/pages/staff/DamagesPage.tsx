@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2 } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/PaginationControls';
 
 interface Product {
   id: string;
@@ -43,6 +45,15 @@ export default function DamagesPage() {
   const [damageDate, setDamageDate] = useState(new Date().toISOString().split('T')[0]);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const {
+    currentData: paginatedDamages,
+    currentPage,
+    totalPages,
+    goToPage,
+    canGoNext,
+    canGoPrevious,
+  } = usePagination({ data: damages, itemsPerPage: 10 });
 
   useEffect(() => {
     fetchData();
@@ -299,7 +310,7 @@ export default function DamagesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {damages.map((damage) => (
+              {paginatedDamages.map((damage) => (
                 <TableRow key={damage.id}>
                   <TableCell>
                     {damage.products.name}
@@ -325,6 +336,18 @@ export default function DamagesPage() {
               )}
             </TableBody>
           </Table>
+          
+          {damages.length > 0 && (
+            <div className="mt-4">
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                canGoNext={canGoNext}
+                canGoPrevious={canGoPrevious}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

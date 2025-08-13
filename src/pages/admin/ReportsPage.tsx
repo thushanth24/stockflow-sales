@@ -42,6 +42,15 @@ export default function ReportsPage() {
   });
   const { toast } = useToast();
 
+  const {
+    currentData: paginatedSales,
+    currentPage,
+    totalPages,
+    goToPage,
+    canGoNext,
+    canGoPrevious,
+  } = usePagination({ data: salesData, itemsPerPage: 10 });
+
   useEffect(() => {
     fetchReportsData();
   }, []);

@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Calendar, Package } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/PaginationControls';
 
 interface DamageReportData {
   id: string;
@@ -41,6 +43,15 @@ export default function DamageReportsPage() {
     to: new Date().toISOString().split('T')[0],
   });
   const { toast } = useToast();
+
+  const {
+    currentData: paginatedReports,
+    currentPage,
+    totalPages,
+    goToPage,
+    canGoNext,
+    canGoPrevious,
+  } = usePagination({ data: damages, itemsPerPage: 10 });
 
   useEffect(() => {
     fetchDamageData();
@@ -188,7 +199,7 @@ export default function DamageReportsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {damages.map((damage) => (
+              {paginatedReports.map((damage) => (
                 <TableRow key={damage.id}>
                   <TableCell>
                     {new Date(damage.damage_date).toLocaleDateString()}
@@ -222,6 +233,18 @@ export default function DamageReportsPage() {
               )}
             </TableBody>
           </Table>
+          
+          {damages.length > 0 && (
+            <div className="mt-4">
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                canGoNext={canGoNext}
+                canGoPrevious={canGoPrevious}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
