@@ -36,6 +36,7 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -46,6 +47,12 @@ export default function ProductsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Filter products based on search term
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const {
     currentData: paginatedProducts,
     currentPage,
@@ -53,7 +60,7 @@ export default function ProductsPage() {
     goToPage,
     canGoNext,
     canGoPrevious,
-  } = usePagination({ data: products, itemsPerPage: 10 });
+  } = usePagination({ data: filteredProducts, itemsPerPage: 10 });
 
   useEffect(() => {
     fetchProducts();
@@ -167,10 +174,26 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">Products</h1>
+    <div className="space-y-6 p-4 sm:p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 sm:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+        <div className="w-full">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 sm:mb-0">Products</h1>
+          <div className="mt-2 w-full sm:w-96">
+            <div className="relative w-full">
+              <Input
+                type="text"
+                placeholder="Search products by name or SKU..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white/20 border-white/30 text-white placeholder-opacity-100 placeholder-gray-200 focus-visible:ring-white/70 focus:bg-white/30 transition-colors"
+              />
+              {!searchTerm && (
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-200 pointer-events-none">
+                  Search products by name or SKU...
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -246,51 +269,62 @@ export default function ProductsPage() {
       </div>
 
       <Card className="border-0 shadow-xl overflow-hidden">
-       
         <CardContent className="p-0">
-          <Table className="divide-y divide-gray-200">
-            <TableHeader className="bg-gray-50">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</TableHead>
-                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Price</TableHead>
-                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Stock</TableHead>
-                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</TableHead>
-                <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+          <div className="overflow-x-auto">
+            <Table className="min-w-full divide-y divide-gray-200">
+              <TableHeader className="bg-gray-50 hidden sm:table-header-group">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</TableHead>
+                  <TableHead className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Price</TableHead>
+                  <TableHead className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Stock</TableHead>
+                  <TableHead className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category</TableHead>
+                  <TableHead className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody className="bg-white divide-y divide-gray-200">
               {paginatedProducts.map((product) => (
                 <TableRow 
                   key={product.id}
-                  className="hover:bg-blue-50 transition-colors duration-150"
+                  className="hover:bg-blue-50 transition-colors duration-150 block sm:table-row"
                 >
-                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                  <TableCell className="px-4 sm:px-6 py-3 whitespace-nowrap block sm:table-cell">
                     <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                    <div className="sm:hidden mt-1 flex flex-wrap gap-2">
+                      <span className="text-sm font-semibold text-green-600">Rs{product.price.toFixed(2)}</span>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        product.current_stock > 10 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {product.current_stock} in stock
+                      </span>
+                      <span className="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                        {product.categories?.name || 'Uncategorized'}
+                      </span>
+                    </div>
                   </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600 hidden sm:table-cell">
                     Rs{product.price.toFixed(2)}
                   </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                  <TableCell className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       product.current_stock > 10 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
                       {product.current_stock} in stock
                     </span>
                   </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                  <TableCell className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                     <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
                       {product.categories?.name || 'Uncategorized'}
                     </span>
                   </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <TableCell className="px-4 sm:px-6 py-3 whitespace-nowrap text-right text-sm font-medium">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => openEditDialog(product)}
-                      className="text-blue-600 hover:text-white hover:bg-blue-600 border-blue-200 hover:border-blue-600 transition-colors"
+                      className="w-full sm:w-auto justify-center text-blue-600 hover:text-white hover:bg-blue-600 border-blue-200 hover:border-blue-600 transition-colors"
                     >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
+                      <Edit className="h-4 w-4 sm:mr-1" />
+                      <span className="sm:inline hidden">Edit</span>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -310,28 +344,31 @@ export default function ProductsPage() {
               )}
             </TableBody>
           </Table>
+          </div>
           
           {products.length > 0 && (
-            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 border-t">
-              <div className="text-sm text-gray-600 font-medium">
-                Showing page {currentPage} of {totalPages} • {products.length} total products
+            <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 bg-white p-3 sm:p-4 border-t">
+              <div className="text-xs sm:text-sm text-gray-600 font-medium text-center sm:text-left mb-2 sm:mb-0">
+                <div className="sm:inline">Page {currentPage} of {totalPages}</div>
+                <span className="hidden sm:inline"> • </span>
+                <div className="sm:inline">{products.length} total products</div>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => goToPage(currentPage - 1)}
                   disabled={!canGoPrevious}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  ← Previous
+                  ← Prev
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => goToPage(currentPage + 1)}
                   disabled={!canGoNext}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next →
                 </Button>

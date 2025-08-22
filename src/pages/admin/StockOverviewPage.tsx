@@ -4,9 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Package, AlertTriangle, TrendingDown } from 'lucide-react';
+import { Package, AlertTriangle, TrendingDown, Filter } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/PaginationControls';
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 interface ProductWithStock {
   id: string;
@@ -15,6 +21,10 @@ interface ProductWithStock {
   price: number;
   current_stock: number;
   created_at: string;
+  category_id: string | null;
+  categories?: {
+    name: string;
+  };
 }
 
 interface StockUpdateWithProduct {
@@ -30,6 +40,9 @@ interface StockUpdateWithProduct {
 
 export default function StockOverviewPage() {
   const [products, setProducts] = useState<ProductWithStock[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<ProductWithStock[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('none');
   const [recentUpdates, setRecentUpdates] = useState<StockUpdateWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -41,7 +54,7 @@ export default function StockOverviewPage() {
     goToPage: goToProductsPage,
     canGoNext: productsCanGoNext,
     canGoPrevious: productsCanGoPrevious,
-  } = usePagination({ data: products, itemsPerPage: 10 });
+  } = usePagination({ data: filteredProducts, itemsPerPage: 10 });
 
   const {
     currentData: paginatedUpdates,
@@ -54,18 +67,45 @@ export default function StockOverviewPage() {
 
   useEffect(() => {
     fetchStockData();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const filterProductsByCategory = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    if (categoryId === 'all') {
+      setFilteredProducts(products);
+    } else if (categoryId !== 'none') {
+      setFilteredProducts(products.filter(product => product.category_id === categoryId));
+    } else {
+      setFilteredProducts([]);
+    }
+  };
 
   const fetchStockData = async () => {
     try {
-      // Fetch all products with current stock
+      // Fetch all products with current stock and category info
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('*')
+        .select('*, categories(name)')
         .order('name');
 
       if (productsError) throw productsError;
       setProducts(productsData || []);
+      setFilteredProducts([]); // Start with empty filtered products
 
       // Fetch recent stock updates
       const { data: updatesData, error: updatesError } = await supabase
@@ -100,8 +140,8 @@ export default function StockOverviewPage() {
     return { label: 'In Stock', variant: 'default' as const };
   };
 
-  const lowStockProducts = products.filter(p => p.current_stock <= 10);
-  const outOfStockProducts = products.filter(p => p.current_stock === 0);
+  const lowStockProducts = filteredProducts.filter(p => p.current_stock <= 10);
+  const outOfStockProducts = filteredProducts.filter(p => p.current_stock === 0);
 
   if (loading) {
     return <div>Loading stock overview...</div>;
@@ -112,6 +152,28 @@ export default function StockOverviewPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Stock Overview</h1>
+        </div>
+        <div className="flex items-center gap-4 mt-4 md:mt-0">
+          <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+            <Filter className="h-4 w-4" />
+            <Select 
+              value={selectedCategory}
+              onValueChange={filterProductsByCategory}
+            >
+              <SelectTrigger className="w-48 bg-transparent border-0 text-white focus:ring-0 focus:ring-offset-0">
+                <SelectValue placeholder="Filter by category" className="text-white" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Select a category</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -124,7 +186,12 @@ export default function StockOverviewPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{products.length}</div>
+            <div className="text-2xl font-bold">{filteredProducts.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {selectedCategory && selectedCategory !== 'all' 
+                ? `In ${categories.find(c => c.id === selectedCategory)?.name || 'selected category'}` 
+                : 'Across all categories'}
+            </p>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-200">

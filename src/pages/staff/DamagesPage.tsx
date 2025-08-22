@@ -12,11 +12,20 @@ import { Trash2, AlertTriangle, Plus, Loader2 } from 'lucide-react';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/PaginationControls';
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 interface Product {
   id: string;
   name: string;
   sku: string;
   current_stock: number;
+  category_id: string | null;
+  categories?: {
+    name: string;
+  };
 }
 
 interface Damage {
@@ -38,8 +47,12 @@ interface DamageEntry {
 
 export default function DamagesPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [damages, setDamages] = useState<Damage[]>([]);
   const [damageEntries, setDamageEntries] = useState<DamageEntry[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [damageDate, setDamageDate] = useState(new Date().toISOString().split('T')[0]);
@@ -61,14 +74,25 @@ export default function DamagesPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch products
+      // Fetch products with categories
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('id, name, sku, current_stock')
+        .select('id, name, sku, current_stock, category_id, categories(name)')
         .order('name');
 
       if (productsError) throw productsError;
-      setProducts(productsData || []);
+      const productsList = productsData || [];
+      setProducts(productsList);
+      setFilteredProducts(productsList);
+      
+      // Fetch categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+        
+      if (categoriesError) throw categoriesError;
+      setCategories(categoriesData || []);
 
       // Fetch recent damages
       const { data: damagesData, error: damagesError } = await supabase
@@ -95,6 +119,37 @@ export default function DamagesPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterProducts = (search: string, categoryId: string) => {
+    let result = [...products];
+    
+    // Apply category filter
+    if (categoryId && categoryId !== 'all') {
+      result = result.filter(product => product.category_id === categoryId);
+    }
+    
+    // Apply search filter
+    if (search) {
+      const searchLower = search.toLowerCase();
+      result = result.filter(product => 
+        product.name.toLowerCase().includes(searchLower) ||
+        product.sku.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    setFilteredProducts(result);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    filterProducts(value, selectedCategory);
+  };
+  
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    filterProducts(searchTerm, categoryId);
   };
 
   const addDamageEntry = () => {
@@ -245,18 +300,53 @@ export default function DamagesPage() {
                         return (
                           <TableRow key={index} className="hover:bg-blue-50 transition-colors duration-150">
                             <TableCell>
-                              <select
-                                className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                                value={entry.product_id}
-                                onChange={(e) => updateDamageEntry(index, 'product_id', e.target.value)}
-                              >
-                                <option value="">Select a product</option>
-                                {products.map((product) => (
-                                  <option key={product.id} value={product.id}>
-                                    {product.name} ({product.sku})
-                                  </option>
-                                ))}
-                              </select>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <div className="flex justify-between items-center">
+                                    <Label htmlFor={`product-${index}`} className="block text-sm font-medium text-gray-700">Product</Label>
+                                    {index === 0 && (
+                                      <div className="flex gap-2">
+                                        <div className="w-48">
+                                          <Input
+                                            type="text"
+                                            placeholder="Search products..."
+                                            value={searchTerm}
+                                            onChange={handleSearchChange}
+                                            className="text-sm h-8"
+                                          />
+                                        </div>
+                                        <div className="w-48">
+                                          <select
+                                            value={selectedCategory}
+                                            onChange={(e) => handleCategoryChange(e.target.value)}
+                                            className="text-sm h-8 w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                          >
+                                            <option value="all">All Categories</option>
+                                            {categories.map((category) => (
+                                              <option key={category.id} value={category.id}>
+                                                {category.name}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <select
+                                    id={`product-${index}`}
+                                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                                    value={entry.product_id}
+                                    onChange={(e) => updateDamageEntry(index, 'product_id', e.target.value)}
+                                  >
+                                    <option value="">Select a product</option>
+                                    {filteredProducts.map((product) => (
+                                      <option key={product.id} value={product.id}>
+                                        {product.name} ({product.sku}) - {product.current_stock} in stock
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
                             </TableCell>
                             <TableCell className="px-6 py-4 whitespace-nowrap text-right">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

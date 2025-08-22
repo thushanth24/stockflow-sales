@@ -144,10 +144,10 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+    <div className="space-y-4 md:space-y-8 p-2 sm:p-4 md:p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-3 p-4 sm:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Categories</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Categories</h1>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -204,19 +204,19 @@ export default function CategoriesPage() {
       </div>
 
       <Card className="border-0 shadow-xl overflow-hidden">
-       
         <CardContent className="p-0">
           {categories.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <Package className="h-16 w-16 text-gray-300" />
-                <h3 className="text-lg font-medium text-gray-700">No categories found</h3>
-                <p className="text-sm text-gray-500">
+            <div className="px-4 sm:px-6 py-8 sm:py-12 text-center">
+              <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-4">
+                <Package className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-700">No categories found</h3>
+                <p className="text-xs sm:text-sm text-gray-500">
                   Get started by creating your first category.
                 </p>
                 <Button 
                   onClick={openCreateDialog}
-                  className="mt-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium"
+                  className="mt-2 sm:mt-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium text-sm sm:text-base"
+                  size="sm"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Create Category
@@ -225,54 +225,63 @@ export default function CategoriesPage() {
             </div>
           ) : (
             <>
-              <Table className="divide-y divide-gray-200">
-                <TableHeader className="bg-gray-50">
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category Name</TableHead>
-                    <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Products</TableHead>
-                    <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="bg-white divide-y divide-gray-200">
-                  {paginatedCategories.map((category) => (
-                    <TableRow 
-                      key={category.id}
-                      className="hover:bg-blue-50 transition-colors duration-150"
-                    >
-                      <TableCell className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="text-sm font-medium text-gray-900">
-                            {category.name}
-                          </div>
-                        </div>
-                        {category.description && (
-                          <p className="text-sm text-gray-500 mt-1">{category.description}</p>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {category.product_count} {category.product_count === 1 ? 'product' : 'products'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(category)}
-                          className="text-blue-600 hover:text-white hover:bg-blue-600 border-blue-200 hover:border-blue-600 transition-colors"
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table className="min-w-full divide-y divide-gray-200">
+                  <TableHeader className="bg-gray-50 hidden sm:table-header-group">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Category Name</TableHead>
+                      <TableHead className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Products</TableHead>
+                      <TableHead className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody className="bg-white divide-y divide-gray-200">
+                    {paginatedCategories.map((category) => (
+                      <TableRow 
+                        key={category.id}
+                        className="hover:bg-blue-50 transition-colors duration-150 flex flex-col sm:table-row"
+                      >
+                        <TableCell className="px-3 sm:px-6 py-3 sm:whitespace-nowrap">
+                          <div className="flex flex-col sm:block">
+                            <div className="text-sm font-medium text-gray-900">
+                              {category.name}
+                            </div>
+                            {category.description && (
+                              <p className="text-xs sm:text-sm text-gray-500 mt-1">{category.description}</p>
+                            )}
+                            <div className="sm:hidden mt-2">
+                              <span className="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {category.product_count} {category.product_count === 1 ? 'product' : 'products'}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-3 whitespace-nowrap hidden sm:table-cell">
+                          <span className="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            {category.product_count} {category.product_count === 1 ? 'product' : 'products'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-6 py-3 whitespace-nowrap text-right">
+                          <div className="flex justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditDialog(category)}
+                              className="text-blue-600 hover:text-white hover:bg-blue-600 border-blue-200 hover:border-blue-600 transition-colors text-xs sm:text-sm"
+                            >
+                              <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
               
-              <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 border-t">
-                <div className="text-sm text-gray-600 font-medium">
-                  Showing page {currentPage} of {totalPages} • {categories.length} total categories
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 bg-white p-3 sm:p-4 border-t">
+                <div className="text-xs sm:text-sm text-gray-600 font-medium text-center sm:text-left">
+                  Page {currentPage} of {totalPages} • {categories.length} total
                 </div>
                 <div className="flex space-x-2">
                   <Button
@@ -280,7 +289,7 @@ export default function CategoriesPage() {
                     size="sm"
                     onClick={() => goToPage(currentPage - 1)}
                     disabled={!canGoPrevious}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px]"
                   >
                     ← Previous
                   </Button>
@@ -289,7 +298,7 @@ export default function CategoriesPage() {
                     size="sm"
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={!canGoNext}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px]"
                   >
                     Next →
                   </Button>

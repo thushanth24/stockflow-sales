@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import LoginPage from "@/components/auth/LoginPage";
@@ -23,103 +24,91 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Navigate to="/auth" replace />} />
-            <Route path="/auth" element={<LoginPage />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <Dashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/products" element={
-              <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}>
-                <DashboardLayout>
-                  <ProductsPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/purchases" element={
-              <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}>
-                <DashboardLayout>
-                  <PurchasesPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/stock-update" element={
-              <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}>
-                <DashboardLayout>
-                  <StockUpdatePage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/damages" element={
-              <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}>
-                <DashboardLayout>
-                  <DamagesPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Admin Routes */}
-            <Route path="/dashboard/reports" element={
-              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <DashboardLayout>
-                  <ReportsPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/stock-overview" element={
-              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <DashboardLayout>
-                  <StockOverviewPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/damage-reports" element={
-              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <DashboardLayout>
-                  <DamageReportsPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/categories" element={
-              <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}>
-                <DashboardLayout>
-                  <CategoriesPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Super Admin Routes */}
-            <Route path="/dashboard/users" element={
-              <ProtectedRoute allowedRoles={['super_admin']}>
-                <DashboardLayout>
-                  <UserManagementPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard/audit-logs" element={
-              <ProtectedRoute allowedRoles={['super_admin']}>
-                <DashboardLayout>
-                  <AuditLogsPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+// Create a layout component that includes SidebarProvider and DashboardLayout
+const DashboardLayoutWrapper = ({ children }: { children: React.ReactNode }) => (
+  <SidebarProvider>
+    <DashboardLayout>
+      {children}
+    </DashboardLayout>
+  </SidebarProvider>
 );
+
+const App = () => {
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <Navigate to="/auth" replace />
+    },
+    {
+      path: "/auth",
+      element: <LoginPage />
+    },
+    {
+      path: "/dashboard",
+      element: <ProtectedRoute><DashboardLayoutWrapper><Dashboard /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/products",
+      element: <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}><DashboardLayoutWrapper><ProductsPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/purchases",
+      element: <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}><DashboardLayoutWrapper><PurchasesPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/stock-update",
+      element: <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}><DashboardLayoutWrapper><StockUpdatePage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/damages",
+      element: <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}><DashboardLayoutWrapper><DamagesPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/reports",
+      element: <ProtectedRoute allowedRoles={['admin', 'super_admin']}><DashboardLayoutWrapper><ReportsPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/stock-overview",
+      element: <ProtectedRoute allowedRoles={['admin', 'super_admin']}><DashboardLayoutWrapper><StockOverviewPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/damage-reports",
+      element: <ProtectedRoute allowedRoles={['admin', 'super_admin']}><DashboardLayoutWrapper><DamageReportsPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/categories",
+      element: <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}><DashboardLayoutWrapper><CategoriesPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/users",
+      element: <ProtectedRoute allowedRoles={['super_admin']}><DashboardLayoutWrapper><UserManagementPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/audit-logs",
+      element: <ProtectedRoute allowedRoles={['super_admin']}><DashboardLayoutWrapper><AuditLogsPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "*",
+      element: <NotFound />
+    }
+  ]);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <RouterProvider 
+            router={router} 
+            future={{
+              v7_startTransition: true
+            }} 
+          />
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

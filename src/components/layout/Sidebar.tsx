@@ -91,7 +91,7 @@ export function Sidebar() {
             <Package className="h-5 w-5 text-white" />
           </div>
           <span className="font-bold text-lg bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
-            Inventory Pro
+            Inventory
           </span>
         </div>
       </SidebarHeader>
