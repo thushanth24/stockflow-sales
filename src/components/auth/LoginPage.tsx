@@ -20,7 +20,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate('/dashboard/products');
     }
   }, [user, navigate]);
 
