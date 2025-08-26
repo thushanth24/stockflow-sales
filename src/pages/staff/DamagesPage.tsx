@@ -235,11 +235,11 @@ export default function DamagesPage() {
   }
 
   return (
-    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+    <div className="space-y-8 p-4 md:p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 md:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Damage Reports</h1>
-          <p className="text-blue-100">Log and track damaged inventory items</p>
+          <h1 className="text-2xl md:text-4xl font-bold tracking-tight">Damage Reports</h1>
+          <p className="text-blue-100 text-sm md:text-base">Log and track damaged inventory items</p>
         </div>
       </div>
 
@@ -248,7 +248,7 @@ export default function DamagesPage() {
           <CardTitle className="text-2xl font-bold text-indigo-800">Report Damages</CardTitle>
           <p className="text-sm text-indigo-600">Log damaged inventory items and track losses</p>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-4 md:p-6">
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg border border-gray-200">
               <div>
@@ -257,22 +257,22 @@ export default function DamagesPage() {
                   {damageEntries.length} items to report
                 </p>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                <div className="flex flex-col w-full sm:w-auto">
                   <Label htmlFor="damage_date" className="text-xs text-gray-700 mb-1">Damage Date</Label>
                   <Input
                     id="damage_date"
                     type="date"
                     value={damageDate}
                     onChange={(e) => setDamageDate(e.target.value)}
-                    className="w-48"
+                    className="w-full sm:w-48"
                   />
                 </div>
                 <Button 
                   type="button" 
                   onClick={addDamageEntry} 
                   variant="outline"
-                  className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                  className="w-full sm:w-auto gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   Add Product
@@ -285,7 +285,7 @@ export default function DamagesPage() {
               {damageEntries.length > 0 && (
                 <div className="rounded-lg border border-gray-200 overflow-hidden">
                   <Table className="divide-y divide-gray-200">
-                    <TableHeader className="bg-gray-50">
+                    <TableHeader className="bg-gray-50 hidden sm:table-header-group">
                       <TableRow className="hover:bg-transparent">
                         <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
                         <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Current</TableHead>
@@ -298,15 +298,15 @@ export default function DamagesPage() {
                       {damageEntries.map((entry, index) => {
                         const selectedProduct = products.find(p => p.id === entry.product_id);
                         return (
-                          <TableRow key={index} className="hover:bg-blue-50 transition-colors duration-150">
+                          <TableRow key={index} className="hover:bg-blue-50 transition-colors duration-150 flex flex-col sm:table-row">
                             <TableCell>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <div className="flex justify-between items-center">
                                     <Label htmlFor={`product-${index}`} className="block text-sm font-medium text-gray-700">Product</Label>
                                     {index === 0 && (
-                                      <div className="flex gap-2">
-                                        <div className="w-48">
+                                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                        <div className="w-full sm:w-48">
                                           <Input
                                             type="text"
                                             placeholder="Search products..."
@@ -315,7 +315,7 @@ export default function DamagesPage() {
                                             className="text-sm h-8"
                                           />
                                         </div>
-                                        <div className="w-48">
+                                        <div className="w-full sm:w-48">
                                           <select
                                             value={selectedCategory}
                                             onChange={(e) => handleCategoryChange(e.target.value)}
@@ -349,20 +349,26 @@ export default function DamagesPage() {
                               </div>
                             </TableCell>
                             <TableCell className="px-6 py-4 whitespace-nowrap text-right">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                (selectedProduct?.current_stock || 0) > 10 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}>
-                                {selectedProduct?.current_stock || 0} in stock
-                              </span>
+                              <div className="flex justify-between sm:justify-end items-center">
+                                <span className="text-xs font-medium text-gray-500 sm:hidden">Current</span>
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  (selectedProduct?.current_stock || 0) > 10 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {selectedProduct?.current_stock || 0} in stock
+                                </span>
+                              </div>
                             </TableCell>
                             <TableCell>
-                              <Input
-                                type="number"
-                                min="1"
-                                value={entry.quantity || ''}
-                                onChange={(e) => updateDamageEntry(index, 'quantity', parseInt(e.target.value) || 0)}
-                                className="w-24 text-right"
-                              />
+                              <div className="flex justify-between items-center sm:justify-end">
+                                <span className="text-xs font-medium text-gray-500 sm:hidden">Quantity</span>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={entry.quantity || ''}
+                                  onChange={(e) => updateDamageEntry(index, 'quantity', parseInt(e.target.value) || 0)}
+                                  className="w-24 text-right"
+                                />
+                              </div>
                             </TableCell>
                             <TableCell>
                               <Textarea
@@ -374,15 +380,17 @@ export default function DamagesPage() {
                               />
                             </TableCell>
                             <TableCell className="px-6 py-4 whitespace-nowrap text-right">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeDamageEntry(index)}
-                                className="text-red-600 hover:text-white hover:bg-red-600 border-red-200 hover:border-red-600 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <div className="flex justify-end">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeDamageEntry(index)}
+                                  className="text-red-600 hover:text-white hover:bg-red-600 border-red-200 hover:border-red-600 transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
@@ -432,56 +440,84 @@ export default function DamagesPage() {
           <p className="text-sm text-gray-600">View and track previously reported damages</p>
         </CardHeader>
         <CardContent className="p-0">
-          <Table className="divide-y divide-gray-200">
-            <TableHeader className="bg-gray-50">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
-                <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Qty</TableHead>
-                <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Reason</TableHead>
-                <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedDamages.map((damage) => (
-                <TableRow key={damage.id} className="hover:bg-blue-50 transition-colors duration-150">
-                  <TableCell className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{damage.products.name}</div>
-                    <div className="text-xs text-gray-500">
-                      {damage.products.sku}
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-right">
-                    <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                      {damage.quantity}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="text-sm text-gray-900 line-clamp-2" title={damage.reason}>
-                      {damage.reason}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(damage.damage_date).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </TableCell>
+          {/* Mobile list view */}
+          <div className="sm:hidden divide-y">
+            {paginatedDamages.map((damage) => (
+              <div key={damage.id} className="p-4 flex flex-col gap-2">
+                <div className="text-base font-medium">{damage.products.name}</div>
+                <div className="text-xs text-gray-500">{damage.products.sku}</div>
+                <div className="flex items-center justify-between text-sm">
+                  <span>Qty</span>
+                  <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{damage.quantity}</span>
+                </div>
+                <div className="text-sm text-gray-700 line-clamp-3" title={damage.reason}>{damage.reason}</div>
+                <div className="text-xs text-muted-foreground">{new Date(damage.damage_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+              </div>
+            ))}
+            {damages.length === 0 && (
+              <div className="p-4 text-center text-gray-500">
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <AlertTriangle className="h-12 w-12 text-gray-400" />
+                  <p className="text-lg font-medium">No damage reports found</p>
+                  <p className="text-sm">Report your first damage to get started</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop/tablet table view */}
+          <div className="hidden sm:block overflow-x-auto">
+            <Table className="min-w-full divide-y divide-gray-200">
+              <TableHeader className="bg-gray-50">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
+                  <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Qty</TableHead>
+                  <TableHead className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Reason</TableHead>
+                  <TableHead className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Date</TableHead>
                 </TableRow>
-              ))}
-              {damages.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <AlertTriangle className="h-12 w-12 text-gray-400" />
-                      <p className="text-lg font-medium">No damage reports found</p>
-                      <p className="text-sm">Report your first damage to get started</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {paginatedDamages.map((damage) => (
+                  <TableRow key={damage.id} className="hover:bg-blue-50 transition-colors duration-150">
+                    <TableCell className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{damage.products.name}</div>
+                      <div className="text-xs text-gray-500">
+                        {damage.products.sku}
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                        {damage.quantity}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <div className="text-sm text-gray-900 line-clamp-2" title={damage.reason}>
+                        {damage.reason}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(damage.damage_date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {damages.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <AlertTriangle className="h-12 w-12 text-gray-400" />
+                        <p className="text-lg font-medium">No damage reports found</p>
+                        <p className="text-sm">Report your first damage to get started</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
           
           {damages.length > 0 && (
             <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 border-t">

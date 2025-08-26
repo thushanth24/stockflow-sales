@@ -206,9 +206,9 @@ export default function StockUpdatePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="space-y-8 p-6 max-w-7xl mx-auto">
-        <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
-          <h1 className="text-4xl font-bold tracking-tight">Daily Stock Update</h1>
+      <div className="space-y-8 p-4 md:p-6 max-w-7xl mx-auto">
+        <div className="p-4 md:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+          <h1 className="text-2xl md:text-4xl font-bold tracking-tight">Daily Stock Update</h1>
         </div>
 
         <Card className="border-0 shadow-xl">
@@ -255,101 +255,143 @@ export default function StockUpdatePage() {
               </div>
             </div>
             <div className="rounded-lg border border-gray-200 overflow-hidden">
-              <Table>
-                <TableHeader className="bg-gray-50 hidden sm:table-header-group">
-                  <TableRow>
-                    <TableHead className="w-1/2 sm:w-2/5 px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
-                    <TableHead className="w-1/4 sm:w-1/5 px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Current</TableHead>
-                    <TableHead className="w-1/4 sm:w-2/5 px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actual Count</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="bg-white divide-y divide-gray-200">
+              {/* Mobile list view */}
+              <div className="sm:hidden divide-y">
                 {paginatedProducts.map((product) => {
                   const stockUpdate = stockUpdates.find(u => u.product_id === product.id);
                   const hasChanges = stockUpdate && stockUpdate.actual_stock !== product.current_stock;
-                  
                   return (
-                    <TableRow 
-                      key={product.id}
-                      className={`${hasChanges ? 'bg-yellow-50' : 'hover:bg-gray-50'} transition-colors duration-150 flex flex-col sm:table-row`}
-                    >
-                      <TableCell className="w-1/2 sm:w-2/5 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <div className="flex justify-between sm:block">
-                          <span className="text-xs font-medium text-gray-500 sm:hidden">Product</span>
+                    <div key={product.id} className={`p-4 space-y-2 ${hasChanges ? 'bg-yellow-50' : ''}`}>
+                      <div className="text-sm font-medium text-gray-900 truncate">{product.name}</div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Current</span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          product.current_stock > 10 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {product.current_stock}
+                        </span>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Actual Count</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={stockUpdate?.actual_stock || 0}
+                          onChange={(e) => updateStockCount(product.id, parseInt(e.target.value) || 0)}
+                          className={`mt-1 w-full text-right border-gray-300 focus:ring-blue-500 focus:border-blue-500 ${hasChanges ? 'border-yellow-500 bg-yellow-50' : ''}`}
+                        />
+                        {hasChanges && (
+                          <span className="text-xs text-yellow-600">Change: {stockUpdate.actual_stock > product.current_stock ? '+' : '-'}{Math.abs(stockUpdate.actual_stock - product.current_stock)}</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredProducts.length === 0 && (
+                  <div className="p-6 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <Package className="h-12 w-12 text-gray-400" />
+                      <h3 className="text-lg font-medium text-gray-700">
+                        {selectedCategory === 'all' ? 'No products found' : 'No products in this category'}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {selectedCategory === 'all' ? 'Add products to get started with stock updates.' : 'Try selecting a different category.'}
+                      </p>
+                      {selectedCategory !== 'all' && (
+                        <Button variant="outline" size="sm" onClick={() => filterProductsByCategory('all')} className="mt-2">Show All Products</Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop/tablet table view */}
+              <div className="hidden sm:block overflow-x-auto">
+                <Table className="min-w-full">
+                  <TableHeader className="bg-gray-50">
+                    <TableRow>
+                      <TableHead className="w-2/5 px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
+                      <TableHead className="w-1/5 px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Current</TableHead>
+                      <TableHead className="w-2/5 px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actual Count</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="bg-white divide-y divide-gray-200">
+                  {paginatedProducts.map((product) => {
+                    const stockUpdate = stockUpdates.find(u => u.product_id === product.id);
+                    const hasChanges = stockUpdate && stockUpdate.actual_stock !== product.current_stock;
+                    
+                    return (
+                      <TableRow 
+                        key={product.id}
+                        className={`${hasChanges ? 'bg-yellow-50' : 'hover:bg-gray-50'} transition-colors duration-150`}
+                      >
+                        <TableCell className="w-2/5 px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 truncate">{product.name}</div>
-                        </div>
-                      </TableCell>
-                      
-                      <TableCell className="w-1/4 sm:w-1/5 px-3 sm:px-6 py-1 sm:py-4 whitespace-nowrap">
-                        <div className="flex justify-between items-center sm:justify-end">
-                          <span className="text-xs font-medium text-gray-500 sm:hidden">Current</span>
+                        </TableCell>
+                        
+                        <TableCell className="w-1/5 px-6 py-4 whitespace-nowrap text-right">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             product.current_stock > 10 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                           }`}>
                             {product.current_stock}
                           </span>
-                        </div>
-                      </TableCell>
-                      
-                      <TableCell className="w-1/4 sm:w-2/5 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2">
-                          <div className="flex justify-between items-center sm:justify-end">
-                            <span className="text-xs font-medium text-gray-500 sm:hidden">Actual Count</span>
-                            <Input
-                              type="number"
-                              min="0"
-                              value={stockUpdate?.actual_stock || 0}
-                              onChange={(e) => updateStockCount(
-                                product.id,
-                                parseInt(e.target.value) || 0
-                              )}
-                              className={`w-24 sm:w-32 text-right border-gray-300 focus:ring-blue-500 focus:border-blue-500 ${
-                                hasChanges ? 'border-yellow-500 bg-yellow-50' : ''
-                              }`}
-                            />
-                          </div>
+                        </TableCell>
+                        
+                        <TableCell className="w-2/5 px-6 py-4 whitespace-nowrap text-right">
+                          <Input
+                            type="number"
+                            min="0"
+                            value={stockUpdate?.actual_stock || 0}
+                            onChange={(e) => updateStockCount(
+                              product.id,
+                              parseInt(e.target.value) || 0
+                            )}
+                            className={`w-32 text-right border-gray-300 focus:ring-blue-500 focus:border-blue-500 ${
+                              hasChanges ? 'border-yellow-500 bg-yellow-50' : ''
+                            }`}
+                          />
                           {hasChanges && (
-                            <span className="text-xs text-yellow-600 text-right sm:text-left">
-                              {stockUpdate.actual_stock > product.current_stock ? '↑' : '↓'} 
+                            <span className="ml-2 text-xs text-yellow-600">
+                              {stockUpdate.actual_stock > product.current_stock ? '↑' : '↓'}
                               {Math.abs(stockUpdate.actual_stock - product.current_stock)}
                             </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {filteredProducts.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="px-6 py-12 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <Package className="h-12 w-12 text-gray-400" />
+                          <h3 className="text-lg font-medium text-gray-700">
+                            {selectedCategory === 'all' 
+                              ? 'No products found' 
+                              : 'No products in this category'}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {selectedCategory === 'all'
+                              ? 'Add products to get started with stock updates.'
+                              : 'Try selecting a different category.'}
+                          </p>
+                          {selectedCategory !== 'all' && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => filterProductsByCategory('all')}
+                              className="mt-2"
+                            >
+                              Show All Products
+                            </Button>
                           )}
                         </div>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-                {filteredProducts.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <Package className="h-12 w-12 text-gray-400" />
-                        <h3 className="text-lg font-medium text-gray-700">
-                          {selectedCategory === 'all' 
-                            ? 'No products found' 
-                            : 'No products in this category'}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {selectedCategory === 'all'
-                            ? 'Add products to get started with stock updates.'
-                            : 'Try selecting a different category.'}
-                        </p>
-                        {selectedCategory !== 'all' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => filterProductsByCategory('all')}
-                            className="mt-2"
-                          >
-                            Show All Products
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-                </TableBody>
-              </Table>
+                  )}
+                  </TableBody>
+                </Table>
+              </div>
               </div>
               
               {filteredProducts.length > 0 && (

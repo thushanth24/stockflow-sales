@@ -199,7 +199,7 @@ export default function ProductsPage() {
           <DialogTrigger asChild>
             <Button 
               onClick={openCreateDialog}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-md transition-all hover:scale-105"
+              className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-md transition-all hover:scale-105"
             >
               <Plus className="mr-2 h-5 w-5" />
               Add New Product

@@ -129,38 +129,39 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+    <div className="space-y-8 p-4 md:p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 md:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Sales Reports</h1>
+          <h1 className="text-2xl md:text-4xl font-bold tracking-tight">Sales Reports</h1>
         </div>
       </div>
 
       <Card>
-        
         <CardContent>
-          <div className="flex gap-4 items-end">
-            <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
+            <div className="space-y-2 w-full sm:w-auto">
               <Label htmlFor="from-date">From Date</Label>
               <Input
                 id="from-date"
                 type="date"
                 value={dateRange.from}
                 onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                className="w-full"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 w-full sm:w-auto">
               <Label htmlFor="to-date">To Date</Label>
               <Input
                 id="to-date"
                 type="date"
                 value={dateRange.to}
                 onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                className="w-full"
               />
             </div>
             <Button 
               onClick={handleDateRangeChange}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md transition-all hover:scale-105"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md transition-all hover:scale-105"
             >
               Apply Filter
             </Button>
@@ -219,38 +220,57 @@ export default function ReportsPage() {
         <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
           <CardTitle className="text-2xl font-bold text-indigo-800">Sales Detail</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table className="divide-y divide-gray-200">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Revenue</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sales.map((sale) => (
-                <TableRow key={sale.id}>
-                  <TableCell>
-                    {new Date(sale.sale_date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="font-medium">{sale.products.name}</TableCell>
-                  <TableCell>{sale.products.sku}</TableCell>
-                  <TableCell>{sale.quantity}</TableCell>
-                  <TableCell>Rs{Number(sale.revenue).toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-              {sales.length === 0 && (
+        <CardContent className="p-0 md:p-6">
+          {/* Mobile list view */}
+          <div className="sm:hidden divide-y">
+            {sales.map((sale) => (
+              <div key={sale.id} className="p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{new Date(sale.sale_date).toLocaleDateString()}</span>
+                  <span className="text-sm font-semibold">Qty: {sale.quantity}</span>
+                </div>
+                <div className="text-base font-medium">{sale.products.name}</div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Revenue</span>
+                  <span className="text-base font-semibold">Rs{Number(sale.revenue).toFixed(2)}</span>
+                </div>
+              </div>
+            ))}
+            {sales.length === 0 && (
+              <div className="p-4 text-center text-muted-foreground">No sales data found for the selected date range</div>
+            )}
+          </div>
+
+          {/* Tablet/Desktop table view */}
+          <div className="hidden sm:block overflow-x-auto">
+            <Table className="min-w-full divide-y divide-gray-200 text-sm">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    No sales data found for the selected date range
-                  </TableCell>
+                  <TableHead className="whitespace-nowrap">Date</TableHead>
+                  <TableHead className="whitespace-nowrap">Product</TableHead>
+                  <TableHead className="whitespace-nowrap">Quantity</TableHead>
+                  <TableHead className="whitespace-nowrap">Revenue</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {sales.map((sale) => (
+                  <TableRow key={sale.id}>
+                    <TableCell className="whitespace-nowrap">{new Date(sale.sale_date).toLocaleDateString()}</TableCell>
+                    <TableCell className="font-medium">{sale.products.name}</TableCell>
+                    <TableCell className="whitespace-nowrap">{sale.quantity}</TableCell>
+                    <TableCell className="whitespace-nowrap">Rs{Number(sale.revenue).toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+                {sales.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      No sales data found for the selected date range
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
       

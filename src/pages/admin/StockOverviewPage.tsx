@@ -148,19 +148,19 @@ export default function StockOverviewPage() {
   }
 
   return (
-    <div className="space-y-8 p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+    <div className="space-y-8 p-4 md:p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 md:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Stock Overview</h1>
+          <h1 className="text-2xl md:text-4xl font-bold tracking-tight">Stock Overview</h1>
         </div>
-        <div className="flex items-center gap-4 mt-4 md:mt-0">
-          <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mt-4 md:mt-0 w-full md:w-auto">
+          <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-lg w-full sm:w-auto">
             <Filter className="h-4 w-4" />
             <Select 
               value={selectedCategory}
               onValueChange={filterProductsByCategory}
             >
-              <SelectTrigger className="w-48 bg-transparent border-0 text-white focus:ring-0 focus:ring-offset-0">
+              <SelectTrigger className="w-full sm:w-48 bg-transparent border-0 text-white focus:ring-0 focus:ring-offset-0">
                 <SelectValue placeholder="Filter by category" className="text-white" />
               </SelectTrigger>
               <SelectContent>
@@ -224,27 +224,21 @@ export default function StockOverviewPage() {
             <CardTitle className="text-xl font-bold text-indigo-800">Current Stock Levels</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table className="divide-y divide-gray-200">
-              <TableHeader>
-                <TableRow className="hover:bg-blue-50 transition-colors duration-150">
-                  <TableHead>Product</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedProducts.map((product) => {
-                  const status = getStockStatus(product.current_stock);
-                  return (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>{product.sku}</TableCell>
-                      <TableCell>{product.current_stock}</TableCell>
-                      <TableCell>
-                        <Badge 
-                        variant={status.variant} 
-                        className={`px-2.5 py-0.5 text-xs font-medium ${
+            {/* Mobile list view */}
+            <div className="sm:hidden divide-y">
+              {paginatedProducts.map((product) => {
+                const status = getStockStatus(product.current_stock);
+                return (
+                  <div key={product.id} className="p-4 flex flex-col gap-2">
+                    <div className="text-base font-medium">{product.name}</div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>SKU: {product.sku}</span>
+                      <span>Stock: {product.current_stock}</span>
+                    </div>
+                    <div>
+                      <Badge 
+                        variant={status.variant}
+                        className={`${
                           status.variant === 'destructive' ? 'bg-red-100 text-red-800' : 
                           status.variant === 'secondary' ? 'bg-amber-100 text-amber-800' :
                           'bg-green-100 text-green-800'
@@ -252,19 +246,59 @@ export default function StockOverviewPage() {
                       >
                         {status.label}
                       </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+              {products.length === 0 && (
+                <div className="p-4 text-center text-muted-foreground">No products found</div>
+              )}
+            </div>
+
+            {/* Desktop/tablet table view */}
+            <div className="hidden sm:block overflow-x-auto">
+              <Table className="min-w-full divide-y divide-gray-200 text-sm">
+                <TableHeader>
+                  <TableRow className="hover:bg-blue-50 transition-colors duration-150">
+                    <TableHead className="whitespace-nowrap">Product</TableHead>
+                    <TableHead className="whitespace-nowrap">SKU</TableHead>
+                    <TableHead className="whitespace-nowrap">Stock</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedProducts.map((product) => {
+                    const status = getStockStatus(product.current_stock);
+                    return (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell className="whitespace-nowrap">{product.sku}</TableCell>
+                        <TableCell className="whitespace-nowrap">{product.current_stock}</TableCell>
+                        <TableCell>
+                          <Badge 
+                          variant={status.variant} 
+                          className={`px-2.5 py-0.5 text-xs font-medium ${
+                            status.variant === 'destructive' ? 'bg-red-100 text-red-800' : 
+                            status.variant === 'secondary' ? 'bg-amber-100 text-amber-800' :
+                            'bg-green-100 text-green-800'
+                          }`}
+                        >
+                          {status.label}
+                        </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {products.length === 0 && (
+                    <TableRow className="hover:bg-blue-50 transition-colors duration-150">
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        No products found
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-                {products.length === 0 && (
-                  <TableRow className="hover:bg-blue-50 transition-colors duration-150">
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No products found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
             
             {products.length > 0 && (
               <div className="p-4 border-t">
@@ -285,44 +319,78 @@ export default function StockOverviewPage() {
             <CardTitle className="text-xl font-bold text-indigo-800">Recent Stock Updates</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table className="divide-y divide-gray-200">
-              <TableHeader>
-                <TableRow className="hover:bg-blue-50 transition-colors duration-150">
-                  <TableHead>Product</TableHead>
-                  <TableHead>From</TableHead>
-                  <TableHead>To</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedUpdates.map((update) => (
-                  <TableRow key={update.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{update.products.name}</div>
-                        <div className="text-xs text-gray-500">{update.products.sku}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{update.previous_stock}</TableCell>
-                    <TableCell>{update.actual_stock}</TableCell>
-                    <TableCell>
-                      {new Date(update.update_date).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {recentUpdates.length === 0 && (
+            {/* Mobile list view */}
+            <div className="sm:hidden divide-y">
+              {paginatedUpdates.map((update) => (
+                <div key={update.id} className="p-4 flex flex-col gap-1">
+                  <div className="text-base font-medium">{update.products.name}</div>
+                  <div className="text-xs text-gray-500">{update.products.sku}</div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span>From</span>
+                    <span className="font-semibold">{update.previous_stock}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span>To</span>
+                    <span className="font-semibold">{update.actual_stock}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Date</span>
+                    <span>{new Date(update.update_date).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+              {recentUpdates.length === 0 && (
+                <div className="p-4 text-center text-gray-500">
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <AlertTriangle className="h-12 w-12 text-gray-400" />
+                    <p className="text-lg font-medium">No stock updates found</p>
+                    <p className="text-sm">Stock updates will appear here</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop/tablet table view */}
+            <div className="hidden sm:block overflow-x-auto">
+              <Table className="min-w-full divide-y divide-gray-200 text-sm">
+                <TableHeader>
                   <TableRow className="hover:bg-blue-50 transition-colors duration-150">
-                    <TableCell colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <AlertTriangle className="h-12 w-12 text-gray-400" />
-                        <p className="text-lg font-medium">No stock updates found</p>
-                        <p className="text-sm">Stock updates will appear here</p>
-                      </div>
-                    </TableCell>
+                    <TableHead className="whitespace-nowrap">Product</TableHead>
+                    <TableHead className="whitespace-nowrap">From</TableHead>
+                    <TableHead className="whitespace-nowrap">To</TableHead>
+                    <TableHead className="whitespace-nowrap">Date</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedUpdates.map((update) => (
+                    <TableRow key={update.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{update.products.name}</div>
+                          <div className="text-xs text-gray-500">{update.products.sku}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">{update.previous_stock}</TableCell>
+                      <TableCell className="whitespace-nowrap">{update.actual_stock}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {new Date(update.update_date).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {recentUpdates.length === 0 && (
+                    <TableRow className="hover:bg-blue-50 transition-colors duration-150">
+                      <TableCell colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <AlertTriangle className="h-12 w-12 text-gray-400" />
+                          <p className="text-lg font-medium">No stock updates found</p>
+                          <p className="text-sm">Stock updates will appear here</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
             
             {recentUpdates.length > 0 && (
               <div className="p-4 border-t">
