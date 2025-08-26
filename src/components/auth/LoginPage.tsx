@@ -47,27 +47,44 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      {/* Decorative gradient blobs */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 0.6, scale: 1 }}
+        transition={{ duration: 0.8 }}
+        className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-gradient-to-br from-fuchsia-400/50 to-indigo-400/50 blur-3xl"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 0.5, scale: 1 }}
+        transition={{ duration: 0.9, delay: 0.1 }}
+        className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-gradient-to-br from-sky-400/50 to-emerald-400/50 blur-3xl"
+      />
+      {/* Subtle grid pattern overlay */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle,theme(colors.indigo.500)_1px,transparent_1px)] [background-size:18px_18px]" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card className="border-0 shadow-xl overflow-hidden dark:border dark:border-gray-700">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-center">
+        <Card className="relative border-0 shadow-2xl overflow-hidden dark:border dark:border-gray-800/60 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-gray-900/50">
+          {/* Animated gradient border */}
+          <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-black/5 after:absolute after:inset-0 after:-z-10 after:blur-2xl after:bg-[conic-gradient(at_20%_20%,theme(colors.blue.400),theme(colors.violet.500),theme(colors.fuchsia.500),theme(colors.cyan.400),theme(colors.blue.400))] after:opacity-20" />
+          <div className="relative bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 p-6 text-center">
             <div className="flex justify-center mb-3">
-              <div className="p-3 bg-white/20 rounded-full">
-                <Package className="h-8 w-8 text-white" />
+              <div className="p-3 bg-white/25 rounded-2xl shadow-inner">
+                <Package className="h-8 w-8 text-white drop-shadow" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-white">StockFlow</CardTitle>
-            <CardDescription className="text-blue-100 mt-1">
-              Inventory Management System
+            <CardTitle className="text-2xl font-extrabold tracking-tight text-white">StockFlow</CardTitle>
+            <CardDescription className="text-indigo-100 mt-1">
+              Smart inventory management for modern teams
             </CardDescription>
           </div>
           
-          <CardContent className="p-6">
+          <CardContent className="relative p-6">
             <form onSubmit={handleSignIn} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -82,7 +99,7 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-11 rounded-lg"
+                    className="pl-10 h-11 rounded-lg focus-visible:ring-2 focus-visible:ring-indigo-500/40"
                     placeholder="Enter your email"
                     required
                   />
@@ -104,7 +121,7 @@ export default function LoginPage() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-11 rounded-lg"
+                    className="pl-10 h-11 rounded-lg focus-visible:ring-2 focus-visible:ring-indigo-500/40"
                     placeholder="Enter your password"
                     required
                   />
@@ -115,8 +132,8 @@ export default function LoginPage() {
                 type="submit" 
                 className={cn(
                   "w-full h-11 text-base font-medium rounded-lg transition-all duration-200",
-                  "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700",
-                  "shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  "bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 hover:from-indigo-700 hover:via-blue-700 hover:to-cyan-600",
+                  "shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 )}
                 disabled={loading}
               >
