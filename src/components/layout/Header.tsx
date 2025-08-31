@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Menu } from 'lucide-react';
 
 export function Header() {
   const { profile, signOut } = useAuth();
@@ -35,12 +35,14 @@ export function Header() {
   return (
     <header className="border-b border-border bg-background px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <SidebarTrigger />
+        <SidebarTrigger className="bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-lg p-2">
+          <Menu className="h-4 w-4" />
+        </SidebarTrigger>
       </div>
       
       <div className="flex items-center gap-4">
         {profile && (
-          <div className={`px-2 py-1 rounded-full text-xs font-medium Rs{getRoleColor(profile.role)}`}>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(profile.role)}`}>
             {formatRole(profile.role)}
           </div>
         )}

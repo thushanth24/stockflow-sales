@@ -20,6 +20,7 @@ import {
   ClipboardList,
   Shield,
   LogOut,
+  LayoutDashboard,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -48,6 +49,8 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const dashboardItem = { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' };
+
   const staffItems = [
     { icon: Package2, label: 'Products', href: '/dashboard/products' },
     { icon: Package, label: 'Categories', href: '/dashboard/categories' },
@@ -68,7 +71,7 @@ export function Sidebar() {
   ];
 
   const getVisibleItems = () => {
-    let items = [...staffItems];
+    let items = [dashboardItem, ...staffItems];
     
     if (profile?.role === 'admin' || profile?.role === 'super_admin') {
       items = [...items, ...adminItems];
@@ -84,46 +87,147 @@ export function Sidebar() {
   const visibleItems = getVisibleItems();
 
   return (
-    <SidebarBase className="bg-gradient-to-b from-indigo-50 to-blue-50 border-r border-blue-100">
-      <SidebarHeader className="border-b border-blue-200 px-6 py-4 bg-white/30 backdrop-blur-sm">
+    <SidebarBase className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 border-r border-blue-200 shadow-lg">
+      <SidebarHeader className="border-b border-blue-200/50 px-6 py-4 bg-gradient-to-r from-white/80 to-blue-50/80 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-sm">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 shadow-lg">
             <Package className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-lg bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
+          <span className="font-bold text-lg bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 bg-clip-text text-transparent">
             Inventory
           </span>
         </div>
       </SidebarHeader>
-      <SidebarContent className="px-2 py-4">
+      <SidebarContent className="px-3 py-6">
         <SidebarGroup>
           <SidebarMenu>
-            {visibleItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === item.href}
-                  className={`group rounded-lg transition-all duration-200 hover:bg-white/80 hover:shadow-sm hover:border hover:border-white/50 ${location.pathname === item.href ? 'bg-white shadow-sm border border-white/50' : ''}`}
-                >
-                  <Link to={item.href} className="group-hover:text-indigo-700">
-                    <item.icon className={`h-4 w-4 ${location.pathname === item.href ? 'text-indigo-600' : 'text-indigo-500 group-hover:text-indigo-600'}`} />
-                    <span className={`font-medium ${location.pathname === item.href ? 'text-indigo-800' : 'text-gray-700 group-hover:text-indigo-800'}`}>
-                      {item.label}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {visibleItems.map((item, index) => {
+              // Define colors for different menu items
+              const getItemColors = (itemLabel: string) => {
+                switch (itemLabel) {
+                  case 'Dashboard':
+                    return {
+                      active: 'from-blue-500 to-indigo-600',
+                      hover: 'from-blue-400 to-indigo-500',
+                      icon: 'text-blue-600',
+                      text: 'text-blue-800'
+                    };
+                  case 'Products':
+                    return {
+                      active: 'from-green-500 to-emerald-600',
+                      hover: 'from-green-400 to-emerald-500',
+                      icon: 'text-green-600',
+                      text: 'text-green-800'
+                    };
+                  case 'Categories':
+                    return {
+                      active: 'from-teal-500 to-cyan-600',
+                      hover: 'from-teal-400 to-cyan-500',
+                      icon: 'text-teal-600',
+                      text: 'text-teal-800'
+                    };
+                  case 'Add Purchase':
+                    return {
+                      active: 'from-emerald-500 to-green-600',
+                      hover: 'from-emerald-400 to-green-500',
+                      icon: 'text-emerald-600',
+                      text: 'text-emerald-800'
+                    };
+                  case 'Stock Update':
+                    return {
+                      active: 'from-blue-500 to-indigo-600',
+                      hover: 'from-blue-400 to-indigo-500',
+                      icon: 'text-blue-600',
+                      text: 'text-blue-800'
+                    };
+                  case 'Report Damage':
+                    return {
+                      active: 'from-orange-500 to-red-600',
+                      hover: 'from-orange-400 to-red-500',
+                      icon: 'text-orange-600',
+                      text: 'text-orange-800'
+                    };
+                  case 'Reports':
+                    return {
+                      active: 'from-purple-500 to-violet-600',
+                      hover: 'from-purple-400 to-violet-500',
+                      icon: 'text-purple-600',
+                      text: 'text-purple-800'
+                    };
+                  case 'Stock Overview':
+                    return {
+                      active: 'from-indigo-500 to-blue-600',
+                      hover: 'from-indigo-400 to-blue-500',
+                      icon: 'text-indigo-600',
+                      text: 'text-indigo-800'
+                    };
+                  case 'Damage Reports':
+                    return {
+                      active: 'from-red-500 to-pink-600',
+                      hover: 'from-red-400 to-pink-500',
+                      icon: 'text-red-600',
+                      text: 'text-red-800'
+                    };
+                  case 'User Management':
+                    return {
+                      active: 'from-violet-500 to-purple-600',
+                      hover: 'from-violet-400 to-purple-500',
+                      icon: 'text-violet-600',
+                      text: 'text-violet-800'
+                    };
+                  case 'Audit Logs':
+                    return {
+                      active: 'from-slate-500 to-gray-600',
+                      hover: 'from-slate-400 to-gray-500',
+                      icon: 'text-slate-600',
+                      text: 'text-slate-800'
+                    };
+                  default:
+                    return {
+                      active: 'from-gray-500 to-slate-600',
+                      hover: 'from-gray-400 to-slate-500',
+                      icon: 'text-gray-600',
+                      text: 'text-gray-800'
+                    };
+                }
+              };
+
+              const colors = getItemColors(item.label);
+              const isActive = location.pathname === item.href;
+
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive}
+                    className={`group rounded-xl transition-all duration-300 hover:shadow-md hover:scale-105 ${
+                      isActive 
+                        ? `bg-gradient-to-r ${colors.active} shadow-lg text-white border-0` 
+                        : 'hover:bg-gradient-to-r hover:from-white/90 hover:to-blue-50/90 border border-transparent hover:border-blue-200/50'
+                    }`}
+                  >
+                    <Link to={item.href} className={`group-hover:text-white ${isActive ? 'text-white' : colors.text}`}>
+                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-white/20' : `bg-${colors.icon.split('-')[1]}-100`}`}>
+                        <item.icon className={`h-4 w-4 ${isActive ? 'text-white' : colors.icon}`} />
+                      </div>
+                      <span className={`font-medium ${isActive ? 'text-white' : colors.text}`}>
+                        {item.label}
+                      </span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
       
       {/* User Profile Section */}
       {profile && (
-        <SidebarFooter className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-t border-blue-100 space-y-3">
-          <div className="flex items-center gap-3 px-2 py-2 bg-white/80 rounded-lg shadow-sm">
-            <Avatar className="h-9 w-9 border-2 border-white shadow">
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+        <SidebarFooter className="p-4 bg-gradient-to-br from-white/90 via-blue-50/90 to-indigo-100/90 border-t border-blue-200/50 space-y-3 backdrop-blur-sm">
+          <div className="flex items-center gap-3 px-3 py-3 bg-gradient-to-r from-white/90 to-blue-50/90 rounded-xl shadow-md border border-blue-200/30">
+            <Avatar className="h-10 w-10 border-2 border-white shadow-lg">
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 text-white font-semibold">
                 {profile?.full_name?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
@@ -131,14 +235,14 @@ export function Sidebar() {
               <p className="text-sm font-semibold text-gray-800 truncate">
                 {profile?.full_name || 'User'}
               </p>
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getRoleColor(profile.role)}`}>
+              <span className={`text-xs px-2 py-1 rounded-full font-medium shadow-sm ${getRoleColor(profile.role)}`}>
                 {formatRole(profile.role)}
               </span>
             </div>
           </div>
           <Button 
             variant="ghost" 
-            className="w-full justify-center gap-2 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 transition-colors rounded-lg py-2"
+            className="w-full justify-center gap-2 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 rounded-xl py-2"
             onClick={() => signOut()}
           >
             <LogOut className="h-4 w-4" />
