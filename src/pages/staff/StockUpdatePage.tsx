@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/PaginationControls';
 import { Package } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Product {
   id: string;
@@ -196,21 +198,57 @@ export default function StockUpdatePage() {
     }
   };
 
-  if (loading) {
+if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
+          <Skeleton className="h-16 md:h-24 w-full rounded-xl" />
+          <Card className="border-0 shadow-xl">
+            <CardContent className="p-6 space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="space-y-2 w-full sm:w-64">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2 w-full sm:w-64">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+              <div className="space-y-3">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="grid grid-cols-3 gap-4 items-center">
+                    <Skeleton className="h-4 w-full col-span-1" />
+                    <Skeleton className="h-4 w-20 justify-self-end" />
+                    <Skeleton className="h-9 w-28 justify-self-end" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <motion.div
+      className="min-h-screen bg-gradient-to-b from-gray-50 to-white"
+      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+    >
       <div className="space-y-8 p-4 md:p-6 max-w-7xl mx-auto">
-        <div className="p-4 md:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+        <motion.div
+          className="p-4 md:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+        >
           <h1 className="text-2xl md:text-4xl font-bold tracking-tight">Daily Stock Update</h1>
-        </div>
+        </motion.div>
 
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.1 }}>
         <Card className="border-0 shadow-xl">
           <CardContent className="p-6">
             <div className="space-y-6">
@@ -257,11 +295,17 @@ export default function StockUpdatePage() {
             <div className="rounded-lg border border-gray-200 overflow-hidden">
               {/* Mobile list view */}
               <div className="sm:hidden divide-y">
-                {paginatedProducts.map((product) => {
+                {paginatedProducts.map((product, idx) => {
                   const stockUpdate = stockUpdates.find(u => u.product_id === product.id);
                   const hasChanges = stockUpdate && stockUpdate.actual_stock !== product.current_stock;
                   return (
-                    <div key={product.id} className={`p-4 space-y-2 ${hasChanges ? 'bg-yellow-50' : ''}`}>
+                    <motion.div
+                      key={product.id}
+                      className={`p-4 space-y-2 ${hasChanges ? 'bg-yellow-50' : ''}`}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, delay: 0.05 * idx }}
+                    >
                       <div className="text-sm font-medium text-gray-900 truncate">{product.name}</div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">Current</span>
@@ -284,7 +328,7 @@ export default function StockUpdatePage() {
                           <span className="text-xs text-yellow-600">Change: {stockUpdate.actual_stock > product.current_stock ? '+' : '-'}{Math.abs(stockUpdate.actual_stock - product.current_stock)}</span>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
                 {filteredProducts.length === 0 && (
@@ -442,7 +486,8 @@ export default function StockUpdatePage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

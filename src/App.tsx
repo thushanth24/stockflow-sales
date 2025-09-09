@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
@@ -27,13 +26,11 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Create a layout component that includes SidebarProvider and DashboardLayout
+// Create a layout component that includes DashboardLayout
 const DashboardLayoutWrapper = ({ children }: { children: React.ReactNode }) => (
-  <SidebarProvider>
-    <DashboardLayout>
-      {children}
-    </DashboardLayout>
-  </SidebarProvider>
+  <DashboardLayout>
+    {children}
+  </DashboardLayout>
 );
 
 const App = () => {
