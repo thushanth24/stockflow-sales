@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { PWADebug } from '@/components/PWADebug';
 import { Package, Lock, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -133,6 +134,11 @@ export default function LoginPage() {
           <p className="text-xs text-white">
             © {new Date().getFullYear()} axzell innovations. All rights reserved.
           </p>
+        </div>
+        
+        {/* PWA Debug Component - Remove in production */}
+        <div className="mt-8">
+          <PWADebug />
         </div>
       </motion.div>
     </div>
