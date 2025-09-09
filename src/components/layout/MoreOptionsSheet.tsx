@@ -45,16 +45,13 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Items that are NOT in the main bottom navigation
+  // Items that are NOT in the main bottom navigation or FAB
   const staffItems = [
-    { icon: Package2, label: 'Products', href: '/dashboard/products' },
-    { icon: Package, label: 'Categories', href: '/dashboard/categories' },
-    { icon: AlertTriangle, label: 'Report Damage', href: '/dashboard/damages' },
+    // No staff items - all moved to FAB or bottom nav
   ];
 
   const adminItems = [
     { icon: BarChart3, label: 'Reports', href: '/dashboard/reports' },
-    { icon: Package, label: 'Stock Overview', href: '/dashboard/stock-overview' },
     { icon: AlertTriangle, label: 'Damage Reports', href: '/dashboard/damage-reports' },
   ];
 
@@ -64,9 +61,7 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
   ];
 
   const secondaryItems = [
-    { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
-    { icon: Bell, label: 'Notifications', href: '/dashboard/notifications' },
-    { icon: HelpCircle, label: 'Help & Support', href: '/dashboard/help' },
+    // No secondary items - removed as requested
   ];
 
   const getVisibleItems = () => {
@@ -106,19 +101,22 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
       />
       
       {/* Bottom Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-50 transform transition-all duration-300 ease-out max-h-[90vh] overflow-hidden">
+      <div 
+        className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-50 transform transition-all duration-300 ease-out max-h-[90vh] overflow-hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
         {/* Handle */}
         <div className="flex justify-center pt-4 pb-3">
           <div className="w-10 h-1 bg-gray-400 rounded-full"></div>
         </div>
 
         {/* Header */}
-        <div className="px-6 pb-6">
+        <div className="px-6 pb-4">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900">More</h2>
             <button
               onClick={onClose}
-              className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:bg-gray-300 transition-colors"
             >
               <X className="h-5 w-5 text-gray-600" />
             </button>
@@ -129,21 +127,21 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
         <div className="flex-1 overflow-y-auto px-6 pb-6">
           {/* User Profile Section */}
           {profile && (
-            <div className="mb-8">
-              <div className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl">
-                <Avatar className="h-14 w-14">
-                  <AvatarFallback className="bg-blue-500 text-white font-semibold text-lg">
+            <div className="mb-6">
+              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                <Avatar className="h-12 w-12">
+                  <AvatarFallback className="bg-blue-500 text-white font-semibold">
                     {profile?.full_name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-lg font-semibold text-gray-900 truncate">
+                  <p className="text-base font-semibold text-gray-900 truncate">
                     {profile?.full_name || 'User'}
                   </p>
                   <p className="text-sm text-gray-500 truncate">
                     {profile?.email}
                   </p>
-                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${getRoleColor(profile.role)}`}>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${getRoleColor(profile.role)}`}>
                     {formatRole(profile.role)}
                   </span>
                 </div>
@@ -153,11 +151,11 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
 
           {/* Main Features */}
           {visibleItems.length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                Features
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                Management
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 {visibleItems.map((item) => {
                   const isActive = location.pathname === item.href;
                   return (
@@ -165,24 +163,24 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
                       key={item.href}
                       onClick={() => handleItemClick(item.href)}
                       className={cn(
-                        "flex flex-col items-center gap-3 p-5 rounded-2xl transition-all duration-200",
-                        "active:scale-95 active:bg-gray-100",
+                        "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-200",
+                        "active:bg-gray-100 active:scale-98",
                         isActive 
                           ? "bg-blue-50 border border-blue-200" 
-                          : "bg-white border border-gray-200"
+                          : "bg-white border border-gray-200 hover:bg-gray-50"
                       )}
                     >
                       <div className={cn(
-                        "p-4 rounded-2xl",
+                        "p-3 rounded-xl",
                         isActive ? "bg-blue-100" : "bg-gray-100"
                       )}>
                         <item.icon className={cn(
-                          "h-6 w-6",
+                          "h-5 w-5",
                           isActive ? "text-blue-600" : "text-gray-600"
                         )} />
                       </div>
                       <span className={cn(
-                        "text-sm font-medium text-center",
+                        "text-base font-medium",
                         isActive ? "text-blue-700" : "text-gray-700"
                       )}>
                         {item.label}
@@ -194,51 +192,53 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
             </div>
           )}
 
-          {/* Secondary Items */}
-          <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-              Settings
-            </h3>
-            <div className="space-y-1">
-              {secondaryItems.map((item) => {
-                const isActive = location.pathname === item.href;
-                return (
-                  <button
-                    key={item.href}
-                    onClick={() => handleItemClick(item.href)}
-                    className={cn(
-                      "w-full flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200",
-                      "active:bg-gray-100",
-                      isActive 
-                        ? "bg-blue-50" 
-                        : "hover:bg-gray-50"
-                    )}
-                  >
-                    <div className={cn(
-                      "p-3 rounded-xl",
-                      isActive ? "bg-blue-100" : "bg-gray-100"
-                    )}>
-                      <item.icon className={cn(
-                        "h-5 w-5",
-                        isActive ? "text-blue-600" : "text-gray-600"
-                      )} />
-                    </div>
-                    <span className={cn(
-                      "text-base font-medium",
-                      isActive ? "text-blue-700" : "text-gray-700"
-                    )}>
-                      {item.label}
-                    </span>
-                  </button>
-                );
-              })}
+          {/* Secondary Items - Only show if there are items */}
+          {secondaryItems.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                Settings
+              </h3>
+              <div className="space-y-2">
+                {secondaryItems.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <button
+                      key={item.href}
+                      onClick={() => handleItemClick(item.href)}
+                      className={cn(
+                        "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-200",
+                        "active:bg-gray-100 active:scale-98",
+                        isActive 
+                          ? "bg-blue-50 border border-blue-200" 
+                          : "bg-white border border-gray-200 hover:bg-gray-50"
+                      )}
+                    >
+                      <div className={cn(
+                        "p-3 rounded-xl",
+                        isActive ? "bg-blue-100" : "bg-gray-100"
+                      )}>
+                        <item.icon className={cn(
+                          "h-5 w-5",
+                          isActive ? "text-blue-600" : "text-gray-600"
+                        )} />
+                      </div>
+                      <span className={cn(
+                        "text-base font-medium",
+                        isActive ? "text-blue-700" : "text-gray-700"
+                      )}>
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Sign Out Button */}
-          <div className="pt-6 border-t border-gray-200">
+          <div className="pt-4 border-t border-gray-200">
             <button 
-              className="w-full flex items-center justify-center gap-3 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 transition-all duration-200 rounded-2xl py-4"
+              className="w-full flex items-center justify-center gap-3 bg-red-50 hover:bg-red-100 active:bg-red-200 active:scale-98 text-red-700 border border-red-200 transition-all duration-200 rounded-2xl py-4"
               onClick={handleSignOut}
             >
               <LogOut className="h-5 w-5" />

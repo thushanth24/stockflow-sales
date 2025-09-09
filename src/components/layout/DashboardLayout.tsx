@@ -20,7 +20,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col w-full bg-gray-50">
       {/* Mobile Header */}
-      <header className="flex items-center justify-center p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm sticky top-0 z-10">
+      <header 
+        className="flex items-center justify-center p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm sticky top-0 z-10"
+        style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
+      >
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-sm">
             <Package className="h-4 w-4 text-white" />
@@ -33,9 +36,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Main Content */}
       <main className={cn(
-        "flex-1 overflow-auto p-4 w-full",
-        "h-[calc(100vh-4rem-5rem)]" // Account for header and taller bottom nav
-      )}>
+        "flex-1 overflow-auto p-4 w-full"
+      )} style={{ 
+        height: 'calc(100vh - 4rem - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))'
+      }}>
         {children}
       </main>
 

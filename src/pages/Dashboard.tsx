@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { FloatingActionButton } from '@/components/ui/FloatingActionButton';
 import { Package, ShoppingCart, AlertTriangle, TrendingUp, Plus, ClipboardList, FileText, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -118,7 +119,7 @@ export default function Dashboard() {
   };
 
     return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200 hover:shadow-lg transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -325,6 +326,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Floating Action Button */}
+      <FloatingActionButton />
     </div>
   );
 }
