@@ -323,14 +323,6 @@ export default function PurchasesPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Purchase Management</h1>
         </div>
-        <Button 
-          className="mt-2 sm:mt-0 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-md transition-all hover:scale-105 text-sm sm:text-base"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          size="sm"
-        >
-          <Plus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-          Log New Purchase
-        </Button>
       </div>
 
       <Card className="border-0 shadow-xl overflow-hidden">

@@ -101,5 +101,25 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+  }
+
+  html {
+    background-color: hsl(var(--background));
+  }
+
+  /* Hide scrollbars for webkit browsers (Chrome, Safari, Edge) */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+
+  *::-webkit-scrollbar {
+    display: none; /* Webkit browsers */
+  }
+
+  /* Ensure scrolling still works */
+  html, body {
+    overflow-x: hidden;
   }
 }

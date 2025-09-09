@@ -18,11 +18,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col w-full bg-gray-50">
+    <div className="min-h-screen flex flex-col w-full bg-gray-50" style={{ 
+      backgroundColor: 'hsl(var(--background))',
+      minHeight: '100vh'
+    }}>
       {/* Mobile Header */}
       <header 
-        className="flex items-center justify-center p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm sticky top-0 z-10"
-        style={{ paddingTop: `calc(1rem + env(safe-area-inset-top))` }}
+        className="flex items-center justify-center p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm fixed top-0 left-0 right-0 z-50"
+        style={{ 
+          paddingTop: `calc(1rem + env(safe-area-inset-top))`,
+          height: `calc(4rem + env(safe-area-inset-top))`
+        }}
       >
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-sm">
@@ -38,7 +44,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <main className={cn(
         "flex-1 overflow-auto p-4 w-full"
       )} style={{ 
-        height: 'calc(100vh - 4rem - 4rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))'
+        marginTop: `calc(4rem + env(safe-area-inset-top))`,
+        height: 'calc(100vh - 4rem - 4rem - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px)'
       }}>
         {children}
       </main>
