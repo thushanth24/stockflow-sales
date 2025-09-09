@@ -47,7 +47,7 @@ export function BottomNavigation({ onMoreClick }: BottomNavigationProps) {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/50 shadow-lg z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <div className="flex items-center justify-around h-20 px-2 pb-2">
+      <div className="flex items-center justify-around h-16 px-2 pb-2">
         {navigationItems.map((item) => {
           const isActive = item.id === 'more' ? false : location.pathname === item.path;
           const Icon = item.icon;
@@ -57,7 +57,7 @@ export function BottomNavigation({ onMoreClick }: BottomNavigationProps) {
               key={item.id}
               onClick={() => handleItemClick(item)}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 py-2 px-1 transition-all duration-200",
+                "flex items-center justify-center flex-1 py-3 px-2 transition-all duration-200",
                 "active:scale-95 rounded-xl mx-1",
                 isActive 
                   ? "text-blue-600" 
@@ -65,7 +65,7 @@ export function BottomNavigation({ onMoreClick }: BottomNavigationProps) {
               )}
             >
               <div className={cn(
-                "p-2 rounded-xl transition-all duration-200 mb-1",
+                "p-3 rounded-xl transition-all duration-200",
                 isActive ? "bg-blue-100" : "bg-transparent"
               )}>
                 <Icon 
@@ -75,14 +75,6 @@ export function BottomNavigation({ onMoreClick }: BottomNavigationProps) {
                   )} 
                 />
               </div>
-              <span 
-                className={cn(
-                  "text-xs font-medium transition-all duration-200",
-                  isActive && "font-semibold"
-                )}
-              >
-                {item.label}
-              </span>
             </button>
           );
         })}

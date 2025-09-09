@@ -63,7 +63,7 @@ export function FloatingActionButton({ className }: FloatingActionButtonProps) {
   };
 
   return (
-    <div className={cn("fixed bottom-24 right-4 z-40 flex flex-col items-end", className)}>
+    <div className={cn("fixed bottom-20 right-4 z-40 flex flex-col items-end", className)}>
       {/* Action Items */}
       <div className={cn(
         "flex flex-col-reverse gap-4 mb-4 transition-all duration-300 ease-out",

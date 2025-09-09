@@ -38,7 +38,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <main className={cn(
         "flex-1 overflow-auto p-4 w-full"
       )} style={{ 
-        height: 'calc(100vh - 4rem - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))'
+        height: 'calc(100vh - 4rem - 4rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))'
       }}>
         {children}
       </main>
