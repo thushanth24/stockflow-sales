@@ -4,9 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { OfflinePage } from "@/components/OfflinePage";
 import LoginPage from "@/components/auth/LoginPage";
 import Dashboard from "@/pages/Dashboard";
 import ProductsPage from "@/pages/staff/ProductsPage";
@@ -34,6 +37,13 @@ const DashboardLayoutWrapper = ({ children }: { children: React.ReactNode }) => 
 );
 
 const App = () => {
+  const isOnline = useOnlineStatus();
+  
+  // Show offline page if user is offline
+  if (!isOnline) {
+    return <OfflinePage />;
+  }
+
   const router = createBrowserRouter([
     {
       path: "/",
@@ -105,6 +115,7 @@ const App = () => {
               v7_startTransition: true
             }} 
           />
+          <PWAInstallPrompt />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

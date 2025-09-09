@@ -1,0 +1,26 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Monochrome version of the icon for Safari -->
+  <circle cx="256" cy="256" r="240" fill="black"/>
+  <rect x="180" y="160" width="152" height="120" rx="8" fill="white"/>
+  <line x1="180" y1="200" x2="332" y2="200" stroke="black" stroke-width="3"/>
+  <line x1="180" y1="240" x2="332" y2="240" stroke="black" stroke-width="3"/>
+  <rect x="190" y="170" width="20" height="25" rx="2" fill="black"/>
+  <rect x="220" y="170" width="20" height="25" rx="2" fill="black"/>
+  <rect x="250" y="170" width="20" height="25" rx="2" fill="black"/>
+  <rect x="280" y="170" width="20" height="25" rx="2" fill="black"/>
+  <rect x="310" y="170" width="20" height="25" rx="2" fill="black"/>
+  <rect x="190" y="210" width="20" height="25" rx="2" fill="black"/>
+  <rect x="220" y="210" width="20" height="25" rx="2" fill="black"/>
+  <rect x="250" y="210" width="20" height="25" rx="2" fill="black"/>
+  <rect x="280" y="210" width="20" height="25" rx="2" fill="black"/>
+  <rect x="310" y="210" width="20" height="25" rx="2" fill="black"/>
+  <path d="M120 320 L160 280 L200 300 L240 240 L280 260 L320 200 L360 220" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="120" cy="320" r="6" fill="white"/>
+  <circle cx="160" cy="280" r="6" fill="white"/>
+  <circle cx="200" cy="300" r="6" fill="white"/>
+  <circle cx="240" cy="240" r="6" fill="white"/>
+  <circle cx="280" cy="260" r="6" fill="white"/>
+  <circle cx="320" cy="200" r="6" fill="white"/>
+  <circle cx="360" cy="220" r="6" fill="white"/>
+  <text x="256" y="380" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">$</text>
+</svg>
