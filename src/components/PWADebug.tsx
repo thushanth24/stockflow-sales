@@ -61,11 +61,25 @@ export const PWADebug: React.FC = () => {
     };
   }, []);
 
-  const handleInstall = async () => {
+  const [swState, setSwState] = useState<{ registered: boolean; controlled: boolean }>({ registered: false, controlled: false });
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        setSwState({ registered: !!reg, controlled: !!navigator.serviceWorker.controller });
+      });
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        setSwState((s) => ({ ...s, controlled: !!navigator.serviceWorker.controller }));
+      });
+    }
+  }, []);
+
+  const handleRegisterSw = async () => {
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
         console.log('Service Worker registered:', registration);
+        setSwState({ registered: true, controlled: !!navigator.serviceWorker.controller });
       } catch (error) {
         console.error('Service Worker registration failed:', error);
       }
@@ -94,7 +108,7 @@ export const PWADebug: React.FC = () => {
           <div>
             <strong>Service Worker:</strong>
             <Badge variant={pwaInfo.hasServiceWorker ? "default" : "secondary"}>
-              {pwaInfo.hasServiceWorker ? "Supported" : "Not Supported"}
+              {pwaInfo.hasServiceWorker ? (swState.controlled ? 'Active' : (swState.registered ? 'Registered' : 'Supported')) : 'Not Supported'}
             </Badge>
           </div>
           <div>
@@ -139,7 +153,7 @@ export const PWADebug: React.FC = () => {
         </div>
         
         <div className="flex gap-2">
-          <Button onClick={handleInstall} variant="outline">
+          <Button onClick={handleRegisterSw} variant="outline">
             Register Service Worker
           </Button>
           <Button onClick={() => window.location.reload()} variant="outline">

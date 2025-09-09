@@ -20,12 +20,14 @@ export default defineConfig({
         enabled: true
       },
       manifest: {
+        id: '/',
         name: 'Stockflow Sales',
         short_name: 'Stockflow',
         description: 'Stockflow Sales Application - Manage your inventory and sales',
         theme_color: '#3B82F6',
         background_color: '#ffffff',
         display: 'standalone',
+        display_override: ['standalone', 'minimal-ui'],
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
