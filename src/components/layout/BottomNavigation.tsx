@@ -46,7 +46,7 @@ export function BottomNavigation({ onMoreClick }: BottomNavigationProps) {
   };
 
   return (
-    <nav className="fixed left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/50 shadow-lg z-50 pt-1" style={{ 
+    <nav className="fixed left-0 right-0 bg-gradient-to-r from-blue-100 to-indigo-100 border-t shadow-sm z-50 pt-1" style={{ 
       bottom: 'calc(env(safe-area-inset-bottom) + 0px)'
     }}>
       <div className="flex items-center justify-around h-20 px-2">
@@ -60,30 +60,25 @@ export function BottomNavigation({ onMoreClick }: BottomNavigationProps) {
               onClick={() => handleItemClick(item)}
               className={cn(
                 "flex items-center justify-center flex-1 py-3 px-2 transition-all duration-200",
-                "active:scale-95 rounded-xl mx-1",
-                isActive 
-                  ? "text-blue-600" 
-                  : "text-gray-500 active:text-gray-700"
+                "active:scale-95 rounded-xl mx-1"
               )}
             >
               <div className={cn(
-                "flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200 min-w-[60px]",
-                isActive ? "bg-blue-100" : "bg-transparent"
+                "flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200 min-w-[60px]"
               )}>
                 <div className={cn(
-                  "p-1.5 rounded-lg transition-all duration-200",
-                  isActive && "bg-blue-100"
+                  "p-1.5 rounded-lg transition-all duration-200"
                 )}>
                   <Icon 
                     className={cn(
                       "h-5 w-5 mx-auto transition-all duration-200",
+                      isActive ? "text-blue-600" : "text-gray-500",
                       isActive && "scale-110"
                     )} 
                   />
                 </div>
                 <span className={cn(
-                  "text-xs mt-1 font-medium transition-all duration-200",
-                  isActive ? "text-blue-600" : "text-gray-500"
+                  "text-xs mt-1 font-medium transition-all duration-200 text-gray-600 dark:text-gray-300"
                 )}>
                   {item.label}
                 </span>

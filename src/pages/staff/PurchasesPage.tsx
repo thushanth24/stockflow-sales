@@ -318,16 +318,16 @@ export default function PurchasesPage() {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 md:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+    <div className="w-full max-w-7xl mx-auto px-4 py-4 flex-1 overflow-y-auto space-y-4 md:space-y-6" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 p-3 md:p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white shadow-sm">
         <div className="w-full sm:w-auto">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight break-words">Purchase Management</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold tracking-tight break-words">Purchase Management</h1>
         </div>
       </div>
 
-      <Card className="border-0 shadow-xl overflow-hidden">
+      <Card className="border shadow-sm overflow-hidden">
 
-        <CardContent className="p-6">
+        <CardContent className="p-4">
           <div className="space-y-3">
             <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200">
               <div className="space-y-2">
@@ -358,7 +358,7 @@ export default function PurchasesPage() {
               <div className="flex flex-col space-y-4">
                 <div className="space-y-3">
                   <div className="flex flex-col gap-2">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Purchase Items</h3>
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900">Purchase Items</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="w-full">
                         <div className="relative">
@@ -400,9 +400,9 @@ export default function PurchasesPage() {
                   <Table>
                     <TableHeader className="bg-gray-50">
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
-                        <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Current Stock</TableHead>
-                        <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Quantity to Add</TableHead>
+                        <TableHead className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
+                        <TableHead className="px-4 py-2.5 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Current Stock</TableHead>
+                        <TableHead className="px-4 py-2.5 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Quantity to Add</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody className="bg-white divide-y divide-gray-200">
@@ -412,7 +412,7 @@ export default function PurchasesPage() {
                             key={product.id}
                             className="hover:bg-blue-50 transition-colors duration-150"
                           >
-                            <TableCell className="px-6 py-4 whitespace-nowrap">
+                            <TableCell className="px-4 py-2.5 whitespace-nowrap">
                               <div className="flex items-center">
                                 <div>
                                   <div className="text-sm font-medium text-gray-900">{product.name}</div>
@@ -426,7 +426,7 @@ export default function PurchasesPage() {
                                 {product.current_stock} in stock
                               </span>
                             </TableCell>
-                            <TableCell className="px-6 py-4 whitespace-nowrap text-right">
+                            <TableCell className="px-4 py-2.5 whitespace-nowrap text-right">
                               <div className="flex justify-end">
                                 <Input
                                   type="number"
@@ -436,7 +436,7 @@ export default function PurchasesPage() {
                                     product.id,
                                     parseInt(e.target.value) || 0
                                   )}
-                                  className="w-32 text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                  className="w-28 h-9 text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                   placeholder="0"
                                 />
                               </div>
@@ -446,11 +446,11 @@ export default function PurchasesPage() {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={4} className="px-6 py-12 text-center">
-                            <div className="flex flex-col items-center justify-center space-y-2">
-                              <Package className="h-12 w-12 text-gray-400" />
-                              <h3 className="text-lg font-medium text-gray-700">No products found</h3>
-                              <p className="text-sm text-gray-500">
+                          <TableCell colSpan={4} className="px-4 py-8 text-center">
+                            <div className="flex flex-col items-center justify-center space-y-1.5">
+                              <Package className="h-8 w-8 text-gray-400" />
+                              <h3 className="text-sm font-medium text-gray-700">No products found</h3>
+                              <p className="text-xs text-gray-500">
                                 {selectedCategory === 'all' 
                                   ? 'No products available. Add products first.'
                                   : 'No products in this category. Try another filter.'}
@@ -467,10 +467,10 @@ export default function PurchasesPage() {
                 <div className="md:hidden space-y-3 mt-4">
                   {filteredProducts.length > 0 ? (
                     filteredProducts.map((product) => (
-                      <div key={product.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                      <div key={product.id} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="font-medium text-gray-900">{product.name}</h4>
+                            <h4 className="text-sm font-medium text-gray-900">{product.name}</h4>
                             <div className="mt-1">
                               <span className={`px-2 py-0.5 inline-flex text-xs font-medium rounded-full ${
                                 product.current_stock > 10 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
@@ -495,7 +495,7 @@ export default function PurchasesPage() {
                                 product.id,
                                 parseInt(e.target.value) || 0
                               )}
-                              className="w-24 text-center"
+                              className="w-24 h-9 text-center"
                               placeholder="0"
                             />
                           </div>
@@ -504,10 +504,10 @@ export default function PurchasesPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center p-8 bg-white rounded-lg border border-gray-200">
-                      <Package className="h-12 w-12 text-gray-400 mx-auto" />
-                      <h3 className="mt-2 text-lg font-medium text-gray-700">No products found</h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                    <div className="text-center p-6 bg-white rounded-lg border border-gray-200">
+                      <Package className="h-8 w-8 text-gray-400 mx-auto" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-700">No products found</h3>
+                      <p className="mt-1 text-xs text-gray-500">
                         {selectedCategory === 'all' 
                           ? 'No products available. Add products first.'
                           : 'No products in this category. Try another filter.'}
@@ -516,11 +516,11 @@ export default function PurchasesPage() {
                   )}
                 </div>
               </div>
-              <div className="mt-6">
+              <div className="mt-4">
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting || Object.values(purchaseEntries).every(qty => !qty)}
-                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-md transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base h-10 sm:h-11 px-4 sm:px-6"
+                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base h-9 sm:h-10 px-4"
                 >
                   {submitting ? (
                     <>
