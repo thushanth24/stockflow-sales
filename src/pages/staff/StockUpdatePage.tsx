@@ -44,6 +44,9 @@ export default function StockUpdatePage() {
   const [stockUpdates, setStockUpdates] = useState<StockUpdate[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [lastUpdateDate, setLastUpdateDate] = useState<string | null>(null);
+  const [existingUpdatesMap, setExistingUpdatesMap] = useState<Record<string, { previous_stock: number; actual_stock: number }>>({});
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -59,7 +62,16 @@ export default function StockUpdatePage() {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchLastUpdateDate();
   }, []);
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchExistingUpdatesForDate(selectedDate);
+    } else {
+      setExistingUpdatesMap({});
+    }
+  }, [selectedDate]);
 
 
 
@@ -108,6 +120,50 @@ export default function StockUpdatePage() {
     }
   };
 
+  const fetchLastUpdateDate = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('stock_updates')
+        .select('update_date')
+        .order('update_date', { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      if (data && data.length > 0) {
+        setLastUpdateDate(data[0].update_date as unknown as string);
+      } else {
+        setLastUpdateDate(null);
+      }
+    } catch (error) {
+      console.error('Error fetching last update date:', error);
+    }
+  };
+
+  const fetchExistingUpdatesForDate = async (date: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('stock_updates')
+        .select('product_id, previous_stock, actual_stock')
+        .eq('update_date', date);
+      if (error) throw error;
+      const map: Record<string, { previous_stock: number; actual_stock: number }> = {};
+      (data || []).forEach((row: any) => {
+        map[row.product_id] = { previous_stock: row.previous_stock, actual_stock: row.actual_stock };
+      });
+      setExistingUpdatesMap(map);
+
+      // Prefill actual counts with existing values for this date when available
+      setStockUpdates(prev =>
+        prev.map(u =>
+          map[u.product_id]
+            ? { ...u, actual_stock: map[u.product_id].actual_stock }
+            : u
+        )
+      );
+    } catch (error) {
+      console.error('Error fetching existing updates for date:', error);
+    }
+  };
+
   const filterProducts = (categoryId: string, search: string) => {
     let result = [...products];
     
@@ -153,7 +209,9 @@ export default function StockUpdatePage() {
     setSubmitting(true);
     
     try {
-      const today = new Date().toISOString().split('T')[0];
+      if (!selectedDate) {
+        throw new Error('Please select a date for the stock update.');
+      }
       
       // Prepare stock update records - only for products with changes
       const stockUpdateRecords = stockUpdates
@@ -163,30 +221,41 @@ export default function StockUpdatePage() {
         })
         .map(update => {
           const product = products.find(p => p.id === update.product_id);
+          const existing = existingUpdatesMap[update.product_id];
           return {
             product_id: update.product_id,
-            previous_stock: product?.current_stock || 0,
+            // Preserve previous_stock if record exists for this date; otherwise use current product stock as baseline
+            previous_stock: existing ? existing.previous_stock : (product?.current_stock || 0),
             actual_stock: update.actual_stock,
-            update_date: today,
+            update_date: selectedDate,
             created_by: user?.id,
           };
         });
 
       if (stockUpdateRecords.length > 0) {
-        // Insert stock updates (this will trigger sales calculation)
-        const { error } = await supabase
-          .from('stock_updates')
-          .insert(stockUpdateRecords);
-
-        if (error) throw error;
+        if (lastUpdateDate && selectedDate === lastUpdateDate) {
+          // Allow editing the last update date via upsert
+          const { error } = await supabase
+            .from('stock_updates')
+            .upsert(stockUpdateRecords, { onConflict: 'product_id,update_date' });
+          if (error) throw error;
+        } else {
+          // Insert new date records only
+          const { error } = await supabase
+            .from('stock_updates')
+            .insert(stockUpdateRecords);
+          if (error) throw error;
+        }
       }
 
       toast({
         title: 'Success',
-        description: `Stock updated successfully. ${stockUpdateRecords.length} products had changes. Sales calculated automatically.`,
+        description: `Stock updated for ${selectedDate}. ${stockUpdateRecords.length} products had changes. Sales calculated automatically.`,
       });
 
-      fetchProducts(); // Refresh to show updated stock
+      // Refresh latest date and products
+      fetchLastUpdateDate();
+      fetchProducts();
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -290,7 +359,22 @@ export default function StockUpdatePage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+              {/* Date selection for stock update */}
+              <div className="w-full sm:w-64">
+                <Label className="text-sm text-gray-700">Stock Date</Label>
+                <Input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="mt-1 w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {lastUpdateDate
+                    ? `Only the most recent date (${lastUpdateDate}) can be edited. Other dates allow new inserts only.`
+                    : 'No previous stock updates found. Any date will create new records.'}
+                </p>
+              </div>
+              </div>
             <div className="rounded-lg border border-gray-200 overflow-hidden">
               {/* Mobile list view */}
               <div className="sm:hidden divide-y -mx-2">
@@ -447,7 +531,7 @@ export default function StockUpdatePage() {
                   <div className="w-full sm:w-auto flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-3">
                     <Button 
                       onClick={handleSubmit} 
-                      disabled={submitting || !stockUpdates.some(update => {
+                      disabled={submitting || !selectedDate || !stockUpdates.some(update => {
                         const product = products.find(p => p.id === update.product_id);
                         return product && product.current_stock !== update.actual_stock;
                       })}

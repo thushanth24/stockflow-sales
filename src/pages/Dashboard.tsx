@@ -119,7 +119,7 @@ export default function Dashboard() {
   };
 
     return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="space-y-6 relative">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200 hover:shadow-lg transition-all duration-300">
@@ -328,8 +328,8 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Floating Action Button */}
-        <FloatingActionButton />
+        {/* Floating Action Button (mobile only) */}
+        <FloatingActionButton className="md:hidden" />
       </div>
     </div>
   );
