@@ -198,69 +198,68 @@ export default function StockUpdatePage() {
     }
   };
 
-if (loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+        <div className="space-y-6">
           <Skeleton className="h-16 md:h-24 w-full rounded-xl" />
           <Card className="border-0 shadow-xl">
             <CardContent className="p-6 space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="space-y-2 w-full sm:w-64">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-10 w-full" />
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700">Loading Products...</h3>
+                  <p className="text-xs text-gray-500">Please wait while we load your products</p>
                 </div>
-                <div className="space-y-2 w-full sm:w-64">
-                  <Skeleton className="h-4 w-40" />
+                <div className="w-full sm:w-64">
                   <Skeleton className="h-10 w-full" />
                 </div>
               </div>
-              <div className="space-y-3">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="grid grid-cols-3 gap-4 items-center">
-                    <Skeleton className="h-4 w-full col-span-1" />
-                    <Skeleton className="h-4 w-20 justify-self-end" />
-                    <Skeleton className="h-9 w-28 justify-self-end" />
-                  </div>
-                ))}
+              <div className="w-full sm:w-64">
+                <Skeleton className="h-10 w-full" />
               </div>
             </CardContent>
           </Card>
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-lg" />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <motion.div
-      className="min-h-screen bg-gradient-to-b from-gray-50 to-white"
-      initial={{ opacity: 0, y: 16, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
-    >
-      <div className="space-y-8 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="space-y-4 sm:space-y-6"
+      >
+      <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
         <motion.div
-          className="p-4 md:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg"
+          className="p-4 sm:p-5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg sm:rounded-xl text-white shadow-lg"
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.05 }}
         >
-          <h1 className="text-2xl md:text-4xl font-bold tracking-tight">Daily Stock Update</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">Daily Stock Update</h1>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.1 }}>
-        <Card className="border-0 shadow-xl">
-          <CardContent className="p-6">
-            <div className="space-y-6">
+        <Card className="border-0 shadow-sm sm:shadow-xl">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="w-full sm:w-auto">
                     <h3 className="text-sm font-medium text-gray-700">Filter Products</h3>
                     <p className="text-xs text-gray-500">
                       {filteredProducts.length} products found
                     </p>
                   </div>
-                  <div className="w-full sm:w-64">
+                  <div className="w-full sm:w-56 md:w-64">
                     <div className="relative">
                       <Input
                         type="text"
@@ -294,14 +293,14 @@ if (loading) {
             </div>
             <div className="rounded-lg border border-gray-200 overflow-hidden">
               {/* Mobile list view */}
-              <div className="sm:hidden divide-y">
+              <div className="sm:hidden divide-y -mx-2">
                 {paginatedProducts.map((product, idx) => {
                   const stockUpdate = stockUpdates.find(u => u.product_id === product.id);
                   const hasChanges = stockUpdate && stockUpdate.actual_stock !== product.current_stock;
                   return (
                     <motion.div
                       key={product.id}
-                      className={`p-4 space-y-2 ${hasChanges ? 'bg-yellow-50' : ''}`}
+                      className={`p-3 space-y-3 ${hasChanges ? 'bg-yellow-50' : 'bg-white'}`}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.25, delay: 0.05 * idx }}
@@ -322,7 +321,7 @@ if (loading) {
                           min="0"
                           value={stockUpdate?.actual_stock || 0}
                           onChange={(e) => updateStockCount(product.id, parseInt(e.target.value) || 0)}
-                          className={`mt-1 w-full text-right border-gray-300 focus:ring-blue-500 focus:border-blue-500 ${hasChanges ? 'border-yellow-500 bg-yellow-50' : ''}`}
+                          className={`mt-1 w-full text-right border-gray-300 focus:ring-blue-500 focus:border-blue-500 py-2 px-3 h-10 ${hasChanges ? 'border-yellow-500 bg-yellow-50' : ''}`}
                         />
                         {hasChanges && (
                           <span className="text-xs text-yellow-600">Change: {stockUpdate.actual_stock > product.current_stock ? '+' : '-'}{Math.abs(stockUpdate.actual_stock - product.current_stock)}</span>
@@ -350,8 +349,8 @@ if (loading) {
               </div>
 
               {/* Desktop/tablet table view */}
-              <div className="hidden sm:block overflow-x-auto">
-                <Table className="min-w-full">
+              <div className="hidden sm:block overflow-x-auto -mx-2 sm:mx-0">
+                <Table className="min-w-full divide-y divide-gray-200">
                   <TableHeader className="bg-gray-50">
                     <TableRow>
                       <TableHead className="w-2/5 px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
@@ -441,11 +440,11 @@ if (loading) {
               {filteredProducts.length > 0 && (
                 <div className="mt-6 pt-4 border-t border-gray-200">
                 <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 whitespace-nowrap">
                     Showing {paginatedProducts.length} of {filteredProducts.length} products
                   </div>
                   
-                  <div className="w-full sm:w-auto flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-4">
+                  <div className="w-full sm:w-auto flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-3">
                     <Button 
                       onClick={handleSubmit} 
                       disabled={submitting || !stockUpdates.some(update => {
@@ -456,6 +455,7 @@ if (loading) {
                         submitting ? 'opacity-70 cursor-not-allowed' : ''
                       }`}
                       size="lg"
+                      style={{ minWidth: '180px' }}
                     >
                       {submitting ? (
                         <>
@@ -470,7 +470,7 @@ if (loading) {
                       )}
                     </Button>
                     
-                    <div className="w-full sm:w-auto">
+                    <div className="w-full sm:w-auto flex justify-center sm:justify-end">
                       <PaginationControls
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -488,6 +488,7 @@ if (loading) {
         </Card>
         </motion.div>
       </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

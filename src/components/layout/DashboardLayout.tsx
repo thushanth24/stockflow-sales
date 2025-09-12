@@ -35,7 +35,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <Package className="h-4 w-4 text-white" />
           </div>
           <h1 className="text-lg font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
-            Inventory Pro
+            Regal
           </h1>
         </div>
       </header>

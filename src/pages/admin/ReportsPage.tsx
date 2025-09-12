@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -129,17 +130,20 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-8 p-4 md:p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 md:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
-        <div>
-          <h1 className="text-2xl md:text-4xl font-bold tracking-tight">Sales Reports</h1>
-        </div>
-      </div>
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-3 py-2 sm:py-3 flex-1 overflow-y-auto space-y-4 sm:space-y-5" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+      <motion.div 
+        className="p-2.5 sm:p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-md text-white shadow-sm"
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.05 }}
+      >
+        <h1 className="text-base sm:text-lg font-semibold tracking-tight">Sales Reports</h1>
+      </motion.div>
 
-      <Card>
-        <CardContent>
+      <Card className="border-0 shadow-xs mt-2 sm:mt-3">
+        <CardContent className="p-2">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
-            <div className="space-y-2 w-full sm:w-auto">
+            <div className="space-y-2 w-full sm:w-40">
               <Label htmlFor="from-date">From Date</Label>
               <Input
                 id="from-date"
@@ -161,7 +165,7 @@ export default function ReportsPage() {
             </div>
             <Button 
               onClick={handleDateRangeChange}
-              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md transition-all hover:scale-105"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs sm:text-sm shadow-sm transition-all hover:scale-[1.02] py-1 h-8 px-3"
             >
               Apply Filter
             </Button>
@@ -169,62 +173,62 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
+      <div className="grid gap-2 grid-cols-2 xs:grid-cols-2 md:grid-cols-4 mt-2 sm:mt-3">
+        <Card className="border-0 shadow-xs hover:shadow-sm transition-all duration-100 h-full">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-1.5 sm:p-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <div className="p-2 rounded-full bg-blue-100 text-blue-600">
               <DollarSign className="h-4 w-4" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Rs{stats.totalRevenue.toFixed(2)}</div>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-sm sm:text-base font-medium">Rs{stats.totalRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <Card className="border-0 shadow-xs hover:shadow-sm transition-all duration-100 h-full">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-1.5 sm:p-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
             <div className="p-2 rounded-full bg-green-100 text-green-600">
               <TrendingUp className="h-4 w-4" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalSales}</div>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-sm sm:text-base font-medium">{stats.totalSales}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <Card className="border-0 shadow-xs hover:shadow-sm transition-all duration-100 h-full">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-1.5 sm:p-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Products</CardTitle>
             <div className="p-2 rounded-full bg-purple-100 text-purple-600">
               <Package className="h-4 w-4" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalProducts}</div>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-sm sm:text-base font-medium">{stats.totalProducts}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <Card className="border-0 shadow-xs hover:shadow-sm transition-all duration-100 h-full">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-1.5 sm:p-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Damages</CardTitle>
             <div className="p-2 rounded-full bg-amber-100 text-amber-600">
               <BarChart3 className="h-4 w-4" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalDamages}</div>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-sm sm:text-base font-medium">{stats.totalDamages}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card className="mt-4 sm:mt-5">
         <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
-          <CardTitle className="text-2xl font-bold text-indigo-800">Sales Detail</CardTitle>
+          <CardTitle className="text-base sm:text-lg font-semibold text-indigo-800">Sales Detail</CardTitle>
         </CardHeader>
         <CardContent className="p-0 md:p-6">
           {/* Mobile list view */}
-          <div className="sm:hidden divide-y">
+          <div className="sm:hidden divide-y -mx-1">
             {sales.map((sale) => (
-              <div key={sale.id} className="p-4 flex flex-col gap-2">
+              <div key={sale.id} className="p-2 flex flex-col gap-1 bg-white">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{new Date(sale.sale_date).toLocaleDateString()}</span>
                   <span className="text-sm font-semibold">Qty: {sale.quantity}</span>
@@ -242,7 +246,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Tablet/Desktop table view */}
-          <div className="hidden sm:block overflow-x-auto">
+          <div className="hidden sm:block overflow-x-auto -mx-1 sm:mx-0 text-sm">
             <Table className="min-w-full divide-y divide-gray-200 text-sm">
               <TableHeader>
                 <TableRow>
@@ -274,12 +278,14 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
       
-      <Card className="border-0 shadow-xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
-          <CardTitle className="text-2xl font-bold text-indigo-800">Data Export</CardTitle>
+      <Card className="border-0 shadow-xs overflow-hidden mt-4 sm:mt-5">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b p-2">
+          <CardTitle className="text-sm font-medium text-indigo-800">Data Export</CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
-          <DataExport />
+        <CardContent className="p-2">
+          <div className="scale-90 sm:scale-100 origin-top-left">
+            <DataExport />
+          </div>
         </CardContent>
       </Card>
     </div>

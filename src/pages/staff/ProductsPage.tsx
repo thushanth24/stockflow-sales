@@ -174,7 +174,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
+    <div className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 sm:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
         <div className="w-full">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 sm:mb-0">Products</h1>

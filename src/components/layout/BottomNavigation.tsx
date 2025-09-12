@@ -46,11 +46,10 @@ export function BottomNavigation({ onMoreClick }: BottomNavigationProps) {
   };
 
   return (
-    <nav className="fixed left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/50 shadow-lg z-50" style={{ 
-      bottom: 'calc(env(safe-area-inset-bottom) + 8px)',
-      paddingBottom: '8px'
+    <nav className="fixed left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/50 shadow-lg z-50 pt-1" style={{ 
+      bottom: 'calc(env(safe-area-inset-bottom) + 0px)'
     }}>
-      <div className="flex items-center justify-around h-16 px-2">
+      <div className="flex items-center justify-around h-20 px-2">
         {navigationItems.map((item) => {
           const isActive = item.id === 'more' ? false : location.pathname === item.path;
           const Icon = item.icon;
@@ -68,15 +67,26 @@ export function BottomNavigation({ onMoreClick }: BottomNavigationProps) {
               )}
             >
               <div className={cn(
-                "p-3 rounded-xl transition-all duration-200",
+                "flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200 min-w-[60px]",
                 isActive ? "bg-blue-100" : "bg-transparent"
               )}>
-                <Icon 
-                  className={cn(
-                    "h-6 w-6 transition-all duration-200",
-                    isActive && "scale-110"
-                  )} 
-                />
+                <div className={cn(
+                  "p-1.5 rounded-lg transition-all duration-200",
+                  isActive && "bg-blue-100"
+                )}>
+                  <Icon 
+                    className={cn(
+                      "h-5 w-5 mx-auto transition-all duration-200",
+                      isActive && "scale-110"
+                    )} 
+                  />
+                </div>
+                <span className={cn(
+                  "text-xs mt-1 font-medium transition-all duration-200",
+                  isActive ? "text-blue-600" : "text-gray-500"
+                )}>
+                  {item.label}
+                </span>
               </div>
             </button>
           );

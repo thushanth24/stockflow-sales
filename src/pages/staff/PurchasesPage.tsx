@@ -318,30 +318,37 @@ export default function PurchasesPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6 bg-gradient-to-b from-gray-50 to-white min-h-screen">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 sm:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
-        <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Purchase Management</h1>
+    <div className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 md:p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white shadow-lg">
+        <div className="w-full sm:w-auto">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight break-words">Purchase Management</h1>
         </div>
       </div>
 
       <Card className="border-0 shadow-xl overflow-hidden">
 
         <CardContent className="p-6">
-          <div className="space-y-6">
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="space-y-3">
+            <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200">
               <div className="space-y-2">
                 <Label htmlFor="purchase_date" className="text-sm font-medium text-gray-700">Purchase Date</Label>
-                <div className="flex items-center space-x-4">
-                  <Input
-                    id="purchase_date"
-                    type="date"
-                    value={purchaseDate}
-                    onChange={(e) => setPurchaseDate(e.target.value)}
-                    className="w-48 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
-                  />
-                  <span className="text-sm text-gray-500">
-                    {new Date(purchaseDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <div className="w-full sm:w-48">
+                    <Input
+                      id="purchase_date"
+                      type="date"
+                      value={purchaseDate}
+                      onChange={(e) => setPurchaseDate(e.target.value)}
+                      className="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                    />
+                  </div>
+                  <span className="text-sm text-gray-500 text-center sm:text-left">
+                    {new Date(purchaseDate).toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
                   </span>
                 </div>
               </div>
@@ -349,43 +356,42 @@ export default function PurchasesPage() {
 
             <div className="space-y-4">
               <div className="flex flex-col space-y-4">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Purchase Items</h3>
-                  <div className="w-full md:w-64">
-                    <div className="relative">
-                      <Input
-                        type="text"
-                        placeholder="Search products..."
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      />
-                      {!searchTerm && (
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                   
-                        </span>
-                      )}
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-2">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Purchase Items</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="w-full">
+                        <div className="relative">
+                          <Input
+                            type="text"
+                            placeholder="Search products..."
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            className="w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm sm:text-base"
+                          />
+                        </div>
+                      </div>
+                      <div className="w-full">
+                        <Select value={selectedCategory} onValueChange={filterProductsByCategory}>
+                          <SelectTrigger className="w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base">
+                            <SelectValue placeholder="Filter by category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all" className="focus:bg-blue-50 text-sm">All Categories</SelectItem>
+                            {categories.map((category) => (
+                              <SelectItem 
+                                key={category.id} 
+                                value={category.id}
+                                className="focus:bg-blue-50 text-sm"
+                              >
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="w-full md:w-auto">
-                  <Select value={selectedCategory} onValueChange={filterProductsByCategory}>
-                    <SelectTrigger className="w-full md:w-64 border-gray-300 focus:ring-blue-500 focus:border-blue-500">
-                      <SelectValue placeholder="Filter by category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="focus:bg-blue-50">All Categories</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem 
-                          key={category.id} 
-                          value={category.id}
-                          className="focus:bg-blue-50"
-                        >
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
@@ -510,22 +516,21 @@ export default function PurchasesPage() {
                   )}
                 </div>
               </div>
-              <div className="mt-6 flex justify-end">
+              <div className="mt-6">
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting || Object.values(purchaseEntries).every(qty => !qty)}
-                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                  size="lg"
+                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-md transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base h-10 sm:h-11 px-4 sm:px-6"
                 >
                   {submitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
+                      <span className="whitespace-nowrap">Processing...</span>
                     </>
                   ) : (
                     <>
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      Complete Purchase
+                      <ShoppingCart className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="whitespace-nowrap">Complete Purchase</span>
                     </>
                   )}
                 </Button>
@@ -535,182 +540,7 @@ export default function PurchasesPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-0 shadow-xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle className="text-xl sm:text-2xl font-bold text-indigo-800">
-              Recent Purchases
-            </CardTitle>
-            {totalItems > 0 && (
-              <div className="text-sm text-indigo-700">
-                Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} purchases
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Desktop Table View */}
-          <div className="hidden md:block">
-            <Table className="min-w-full divide-y divide-gray-200">
-              <TableHeader className="bg-gray-50">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</TableHead>
-                  <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Quantity</TableHead>
-                  <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="bg-white divide-y divide-gray-200">
-                {purchases.length > 0 ? (
-                  purchases.map((purchase) => (
-                    <TableRow 
-                      key={purchase.id}
-                      className="hover:bg-blue-50 transition-colors duration-150"
-                    >
-                      <TableCell className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{purchase.products.name}</div>
-                      
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          +{purchase.quantity} added
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                        {new Date(purchase.purchase_date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <Package className="h-12 w-12 text-gray-400" />
-                        <h3 className="text-lg font-medium text-gray-700">No purchase history</h3>
-                        <p className="text-sm text-gray-500">
-                          Log your first purchase to see it here
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
 
-          {/* Mobile Card View */}
-          <div className="md:hidden">
-            {purchases.length > 0 ? (
-              <div className="divide-y divide-gray-200">
-                {purchases.map((purchase) => (
-                  <div key={purchase.id} className="p-4 hover:bg-gray-50">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{purchase.products.name}</h4>
-                        <div className="mt-1 flex items-center space-x-2">
-                      
-                          <span className="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            +{purchase.quantity} added
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-500">
-                          {new Date(purchase.purchase_date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          })}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {new Date(purchase.purchase_date).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-6 text-center">
-                <Package className="h-12 w-12 text-gray-400 mx-auto" />
-                <h3 className="mt-2 text-lg font-medium text-gray-700">No purchase history</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Log your first purchase to see it here
-                </p>
-              </div>
-            )}
-          </div>
-          
-          {totalItems > 0 && (
-            <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-gray-50 border-t border-gray-200 gap-4">
-              <div className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(1)}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 text-sm"
-                >
-                  First
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 text-sm"
-                >
-                  Previous
-                </Button>
-                
-                {getPageNumbers().map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handlePageChange(page)}
-                    className={`px-3 py-1 text-sm ${currentPage === page ? 'bg-indigo-600 text-white' : ''}`}
-                  >
-                    {page}
-                  </Button>
-                ))}
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 text-sm"
-                >
-                  Next
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 text-sm"
-                >
-                  Last
-                </Button>
-              </div>
-              <div className="text-sm text-gray-600">
-                {itemsPerPage} per page
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
