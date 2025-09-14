@@ -8,6 +8,28 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Download, FileText, Database } from 'lucide-react';
 
+interface BaseRow {
+  product_name: string;
+  category_name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  date: string;
+}
+
+interface SalesRow extends BaseRow {}
+
+interface DamagesRow extends BaseRow {
+  reason: string;
+}
+
+interface CurrentStockRow {
+  category_name: string;
+  product_name: string;
+  price: number;
+  quantity: number;
+}
+
 interface ExportOptions {
   table: string;
   format: 'csv' | 'json';
@@ -27,6 +49,7 @@ export function DataExport() {
 
   const exportTables = [
     { value: 'products', label: 'Products', dateField: 'created_at' },
+    { value: 'current_stock', label: 'Current Stock', dateField: null },
     { value: 'purchases', label: 'Purchases', dateField: 'purchase_date' },
     { value: 'damages', label: 'Damage Reports', dateField: 'damage_date' },
     { value: 'stock_updates', label: 'Stock Updates', dateField: 'update_date' },
@@ -91,20 +114,169 @@ export function DataExport() {
     try {
       const tableInfo = exportTables.find(t => t.value === options.table);
       
-      // Use a type assertion to ensure proper table name
-      const tableName = options.table as 'products' | 'purchases' | 'damages' | 'stock_updates' | 'sales' | 'role_change_audit' | 'profiles' | 'stock_updates_archive';
-      let query = supabase.from(tableName).select('*');
+      let data;
 
-      // Apply date filter if table has date field
-      if (tableInfo?.dateField) {
+      if (options.table === 'purchases') {
+        // Join purchases with products and categories to get all required fields
+        let query = supabase
+          .from('purchases')
+          .select(`
+            quantity,
+            purchase_date,
+            products (name, price, categories (name))
+          `);
+
+        // Apply date filter for purchase date
         query = query
-          .gte(tableInfo.dateField, options.dateFrom)
-          .lte(tableInfo.dateField, options.dateTo);
+          .gte('purchase_date', options.dateFrom)
+          .lte('purchase_date', options.dateTo);
+
+        const { data: tableData, error: tableError } = await query;
+        if (tableError) throw tableError;
+
+        // Transform the data to include category and product details
+        data = tableData?.map(record => ({
+          product_name: record.products?.name || 'N/A',
+          category_name: record.products?.categories?.name || 'N/A',
+          quantity: record.quantity,
+          unit_price: record.products?.price || 0,
+          total_price: (record.products?.price || 0) * record.quantity,
+          date: record.purchase_date
+        })) || [];
+      } else if (options.table === 'sales') {
+        // Join sales with products and categories to get all required fields
+        let query = supabase
+          .from('sales')
+          .select(`
+            quantity,
+            revenue,
+            sale_date,
+            products (name, price, categories (name))
+          `);
+
+        // Apply date filter for sale date
+        query = query
+          .gte('sale_date', options.dateFrom)
+          .lte('sale_date', options.dateTo);
+
+        const { data: tableData, error: tableError } = await query;
+        if (tableError) throw tableError;
+
+        // Transform the data to include category and product details
+        const salesData: SalesRow[] = tableData?.map(record => ({
+          product_name: record.products?.name || 'N/A',
+          category_name: record.products?.categories?.name || 'N/A',
+          quantity: record.quantity,
+          unit_price: record.products?.price || 0,
+          total_price: record.revenue || 0,
+          date: record.sale_date || ''
+        })) || [];
+
+        // Calculate overall total
+        const overallTotal = salesData.reduce((sum, item) => sum + (item.total_price || 0), 0);
+        
+        // Add a summary row
+        if (salesData.length > 0) {
+          const summaryRow: SalesRow = {
+            product_name: '',
+            category_name: '',
+            quantity: 0,
+            unit_price: 0,
+            total_price: overallTotal,
+            date: 'Total:'
+          };
+          salesData.push(summaryRow);
+        }
+
+        data = salesData;
+      } else if (options.table === 'damages') {
+        // Join damages with products and categories to get all required fields
+        let query = supabase
+          .from('damages')
+          .select(`
+            quantity,
+            reason,
+            damage_date,
+            products (name, price, categories (name))
+          `);
+
+        // Apply date filter for damage date
+        query = query
+          .gte('damage_date', options.dateFrom)
+          .lte('damage_date', options.dateTo);
+
+        const { data: tableData, error: tableError } = await query;
+        if (tableError) throw tableError;
+
+        // Transform the data to include category and product details
+        const damagesData: DamagesRow[] = tableData?.map(record => ({
+          product_name: record.products?.name || 'N/A',
+          category_name: record.products?.categories?.name || 'N/A',
+          quantity: record.quantity,
+          unit_price: record.products?.price || 0,
+          total_price: (record.products?.price || 0) * record.quantity,
+          reason: record.reason || 'N/A',
+          date: record.damage_date || ''
+        })) || [];
+
+        // Calculate overall total
+        const overallTotal = damagesData.reduce((sum, item) => sum + (item.total_price || 0), 0);
+        
+        // Add a summary row
+        if (damagesData.length > 0) {
+          const summaryRow: DamagesRow = {
+            product_name: '',
+            category_name: '',
+            quantity: 0,
+            unit_price: 0,
+            total_price: overallTotal,
+            reason: '',
+            date: 'Total:'
+          };
+          damagesData.push(summaryRow);
+        }
+
+        data = damagesData;
+      } else if (options.table === 'current_stock') {
+        // Get current stock of all products with category information
+        const { data: tableData, error: tableError } = await supabase
+          .from('products')
+          .select(`
+            name,
+            sku,
+            price,
+            current_stock,
+            categories (name)
+          `)
+          .order('name');
+
+        if (tableError) throw tableError;
+
+        // Transform the data to include only required fields
+        const currentStockData: CurrentStockRow[] = tableData?.map(product => ({
+          category_name: product.categories?.name || 'N/A',
+          product_name: product.name || 'N/A',
+          price: product.price || 0,
+          quantity: product.current_stock || 0
+        })) || [];
+        
+        data = currentStockData;
+      } else {
+        // Handle other tables normally
+        const tableName = options.table as 'products' | 'purchases' | 'damages' | 'stock_updates' | 'sales' | 'role_change_audit' | 'profiles' | 'stock_updates_archive';
+        let query = supabase.from(tableName).select('*');
+
+        // Apply date filter if table has date field
+        if (tableInfo?.dateField) {
+          query = query
+            .gte(tableInfo.dateField, options.dateFrom)
+            .lte(tableInfo.dateField, options.dateTo);
+        }
+
+        const { data: tableData, error: tableError } = await query;
+        if (tableError) throw tableError;
+        data = tableData;
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
 
       if (!data || data.length === 0) {
         toast({
