@@ -22,17 +22,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div
-      className="min-h-screen w-full bg-gray-50"
+      className="min-h-screen w-full"
       style={{ backgroundColor: 'hsl(var(--background))' }}
     >
       {/* Mobile layout */}
-      <div className="flex flex-col md:hidden min-h-screen w-full">
+      <div className="flex flex-col md:hidden h-screen w-full">
         {/* Mobile Header */}
         <header
-          className="flex items-center justify-center p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm fixed top-0 left-0 right-0 z-50"
+          className="flex items-center justify-center p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm z-50"
           style={{
-            paddingTop: `calc(1rem + env(safe-area-inset-top))`,
-            height: `calc(4rem + env(safe-area-inset-top))`,
+            paddingTop: `calc(0.5rem + env(safe-area-inset-top))`,
+            minHeight: `3.5rem`,
           }}
         >
           <div className="flex items-center gap-2">
@@ -46,14 +46,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* Main Content (mobile) */}
-        <main
-          className={cn('flex-1 overflow-auto p-4 w-full')}
-          style={{
-            marginTop: `calc(4rem + env(safe-area-inset-top))`,
-            height:
-              'calc(100vh - 4rem - 4rem - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px)',
-          }}
-        >
+        <main className="flex-1 overflow-auto p-4 w-full">
           {children}
         </main>
 
@@ -68,16 +61,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       {/* Desktop / Tablet layout */}
-      <div className="hidden md:block min-h-screen">
+      <div className="hidden md:block h-screen w-full">
         <SidebarProvider>
-          <div className="flex min-h-screen">
+          <div className="flex h-full w-full">
             <Sidebar />
-            <SidebarInset className="flex-1 flex flex-col min-h-screen">
+            <div className="flex-1 flex flex-col h-full w-full">
               <Header />
-              <main className="flex-1 overflow-auto p-6">
-                {children}
+              <main className="flex-1 overflow-auto p-6 w-full">
+                <div className="max-w-[2000px] mx-auto w-full">
+                  {children}
+                </div>
               </main>
-            </SidebarInset>
+            </div>
           </div>
         </SidebarProvider>
       </div>
