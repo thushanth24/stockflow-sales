@@ -1,5 +1,10 @@
--- Create user roles enum
-CREATE TYPE public.user_role AS ENUM ('super_admin', 'admin', 'staff');
+-- Create user roles enum if it doesn't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+    CREATE TYPE public.user_role AS ENUM ('super_admin', 'admin', 'staff');
+  END IF;
+END $$;
 
 -- Create profiles table for user management
 CREATE TABLE public.profiles (
@@ -81,9 +86,9 @@ RETURNS user_role
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-AS RsRs
+AS $$
   SELECT role FROM public.profiles WHERE id = user_id;
-RsRs;
+$$;
 
 -- RLS Policies for profiles
 CREATE POLICY "Users can view their own profile" ON public.profiles
@@ -129,6 +134,9 @@ CREATE POLICY "All authenticated users can view damages" ON public.damages
 CREATE POLICY "Staff and above can insert damages" ON public.damages
   FOR INSERT TO authenticated WITH CHECK (public.get_user_role(auth.uid()) IN ('staff', 'admin', 'super_admin'));
 
+CREATE POLICY "Staff and above can update damages" ON public.damages
+  FOR UPDATE TO authenticated USING (public.get_user_role(auth.uid()) IN ('staff', 'admin', 'super_admin'));
+
 -- RLS Policies for sales
 CREATE POLICY "Admin and above can view sales" ON public.sales
   FOR SELECT TO authenticated USING (public.get_user_role(auth.uid()) IN ('admin', 'super_admin'));
@@ -141,7 +149,7 @@ CREATE OR REPLACE FUNCTION public.calculate_sales_for_product(
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS RsRs
+AS $$
 DECLARE
   v_previous_stock INTEGER;
   v_actual_stock INTEGER;
@@ -173,8 +181,8 @@ BEGIN
   FROM public.products
   WHERE id = p_product_id;
 
-  -- Calculate sales: (Previous Stock + Purchases) - (Current Stock + Damages)
-  v_sales_qty := (v_previous_stock + v_purchases) - (v_actual_stock + v_damages);
+  -- Calculate sales: (Previous Stock + Purchases - Current Stock - Damages)
+  v_sales_qty := (v_previous_stock + v_purchases) - v_actual_stock - v_damages;
 
   -- Insert sales record if sales quantity > 0
   IF v_sales_qty > 0 THEN
@@ -183,14 +191,14 @@ BEGIN
     ON CONFLICT DO NOTHING;
   END IF;
 END;
-RsRs;
+$$;
 
 -- Create trigger function for automatic sales calculation
 CREATE OR REPLACE FUNCTION public.trigger_calculate_sales()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS RsRs
+AS $$
 BEGIN
   -- Calculate sales when a stock update is inserted
   PERFORM public.calculate_sales_for_product(NEW.product_id, NEW.update_date);
@@ -202,7 +210,7 @@ BEGIN
   
   RETURN NEW;
 END;
-RsRs;
+$$;
 
 -- Create trigger for automatic sales calculation
 CREATE TRIGGER trigger_stock_update_calculate_sales
@@ -215,7 +223,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS RsRs
+AS $$
 BEGIN
   INSERT INTO public.profiles (id, email, full_name, role)
   VALUES (
@@ -226,7 +234,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-RsRs;
+$$;
 
 -- Create trigger for new user registration
 CREATE TRIGGER on_auth_user_created
@@ -236,12 +244,12 @@ CREATE TRIGGER on_auth_user_created
 
 -- Create function to update timestamps
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS RsRs
+RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-RsRs LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Create triggers for updating timestamps
 CREATE TRIGGER update_profiles_updated_at

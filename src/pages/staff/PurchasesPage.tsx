@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Package, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import { Loader2, Package, Plus, ShoppingCart, Trash2, Edit2 } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -58,6 +58,8 @@ export default function PurchasesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingPurchaseId, setEditingPurchaseId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -137,14 +139,14 @@ export default function PurchasesPage() {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
       
-      // Fetch paginated data
+      // Fetch paginated data with product details
       const { data, error } = await supabase
         .from('purchases')
         .select(`
           *,
           products (name, sku)
         `)
-        .order('purchase_date', { ascending: false })
+        .order('created_at', { ascending: false })
         .range(from, to);
 
       if (error) throw error;
@@ -235,6 +237,67 @@ export default function PurchasesPage() {
     }));
   };
 
+  const loadPurchaseForEditing = async (purchaseId: string) => {
+    try {
+      setSubmitting(true);
+      
+      // First, get the purchase date of the selected purchase
+      const { data: selectedPurchase, error: purchaseError } = await supabase
+        .from('purchases')
+        .select('purchase_date')
+        .eq('id', purchaseId)
+        .single();
+
+      if (purchaseError) throw purchaseError;
+      
+      if (!selectedPurchase) {
+        throw new Error('Purchase not found');
+      }
+      
+      // Get all purchases made at the same time (same purchase_date)
+      const { data: purchaseData, error: purchasesError } = await supabase
+        .from('purchases')
+        .select('*, products(*)')
+        .eq('purchase_date', selectedPurchase.purchase_date)
+        .order('created_at', { ascending: false });
+        
+      if (purchasesError) throw purchasesError;
+      
+      if (!purchaseData || purchaseData.length === 0) {
+        throw new Error('No purchases found');
+      }
+      
+      // Create entries for all products in this purchase
+      const entries = {};
+      purchaseData.forEach(purchase => {
+        if (purchase.product_id) {
+          entries[purchase.product_id] = purchase.quantity;
+        }
+      });
+      
+      // Set the form state
+      setPurchaseDate(selectedPurchase.purchase_date);
+      setPurchaseEntries(entries);
+      setEditingPurchaseId(purchaseId);
+      setIsEditMode(true);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load purchase for editing',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setPurchaseDate(new Date().toISOString().split('T')[0]);
+    setPurchaseEntries({});
+    setIsEditMode(false);
+    setEditingPurchaseId(null);
+  };
+
   const handleSubmit = async () => {
     const validEntries = Object.entries(purchaseEntries)
       .filter(([_, quantity]) => quantity > 0)
@@ -255,44 +318,170 @@ export default function PurchasesPage() {
     setSubmitting(true);
     
     try {
-      // Insert all purchase records
-      const purchaseRecords = validEntries.map(entry => ({
-        product_id: entry.product_id,
-        quantity: entry.quantity,
-        purchase_date: purchaseDate,
-        created_by: user?.id,
-      }));
-
-      const { error } = await supabase
-        .from('purchases')
-        .insert(purchaseRecords);
-
-      if (error) throw error;
-
-      // Update product current stock for each product
-      for (const entry of validEntries) {
-        const { data: product } = await supabase
-          .from('products')
-          .select('current_stock')
-          .eq('id', entry.product_id)
+      if (isEditMode && editingPurchaseId) {
+        // Get the original purchase date to find all related purchases
+        const { data: originalPurchase, error: fetchError } = await supabase
+          .from('purchases')
+          .select('purchase_date')
+          .eq('id', editingPurchaseId)
           .single();
 
-        if (product) {
-          await supabase
-            .from('products')
-            .update({ current_stock: product.current_stock + entry.quantity })
-            .eq('id', entry.product_id);
+        if (fetchError) throw fetchError;
+        
+        if (!originalPurchase) {
+          throw new Error('Original purchase not found');
         }
+        
+        // Get all original purchases made at the same time
+        const { data: originalPurchases, error: fetchAllError } = await supabase
+          .from('purchases')
+          .select('id, product_id, quantity')
+          .eq('purchase_date', originalPurchase.purchase_date);
+          
+        if (fetchAllError) throw fetchAllError;
+        
+        if (!originalPurchases || originalPurchases.length === 0) {
+          throw new Error('No original purchases found');
+        }
+        
+        // Create a map of product_id to original purchase for easy lookup
+        const originalPurchasesMap = new Map(
+          originalPurchases.map(p => [p.product_id, p])
+        );
+        
+        // First, update all existing purchases and calculate stock differences
+        for (const entry of validEntries) {
+          const originalPurchase = originalPurchasesMap.get(entry.product_id);
+          
+          if (originalPurchase) {
+            // Update existing purchase
+            const { error: updateError } = await supabase
+              .from('purchases')
+              .update({
+                quantity: entry.quantity,
+                purchase_date: purchaseDate
+              })
+              .eq('id', originalPurchase.id);
+              
+            if (updateError) throw updateError;
+            
+            // Calculate stock difference
+            const quantityDifference = entry.quantity - originalPurchase.quantity;
+            
+            // Update product stock
+            const { data: product } = await supabase
+              .from('products')
+              .select('current_stock')
+              .eq('id', entry.product_id)
+              .single();
+              
+            if (product) {
+              await supabase
+                .from('products')
+                .update({ current_stock: product.current_stock + quantityDifference })
+                .eq('id', entry.product_id);
+            }
+          } else {
+            // This is a new product being added to the purchase
+            const { error: insertError } = await supabase
+              .from('purchases')
+              .insert([{
+                product_id: entry.product_id,
+                quantity: entry.quantity,
+                purchase_date: purchaseDate,
+                created_by: user?.id
+              }]);
+              
+            if (insertError) throw insertError;
+            
+            // Update product stock for new item
+            const { data: product } = await supabase
+              .from('products')
+              .select('current_stock')
+              .eq('id', entry.product_id)
+              .single();
+              
+            if (product) {
+              await supabase
+                .from('products')
+                .update({ current_stock: product.current_stock + entry.quantity })
+                .eq('id', entry.product_id);
+            }
+          }
+        }
+        
+        // Handle case where products were removed from the purchase
+        const updatedProductIds = validEntries.map(e => e.product_id);
+        const purchasesToDelete = originalPurchases.filter(
+          p => !updatedProductIds.includes(p.product_id)
+        );
+        
+        // Delete purchases that were removed
+        for (const purchase of purchasesToDelete) {
+          // First, adjust the product stock
+          const { data: product } = await supabase
+            .from('products')
+            .select('current_stock')
+            .eq('id', purchase.product_id)
+            .single();
+            
+          if (product) {
+            await supabase
+              .from('products')
+              .update({ current_stock: product.current_stock - purchase.quantity })
+              .eq('id', purchase.product_id);
+          }
+          
+          // Then delete the purchase record
+          await supabase
+            .from('purchases')
+            .delete()
+            .eq('id', purchase.id);
+        }
+
+        toast({
+          title: 'Success',
+          description: 'Purchase updated successfully',
+        });
+      } else {
+        // Create new purchase records
+        const purchaseRecords = validEntries.map(entry => ({
+          product_id: entry.product_id,
+          quantity: entry.quantity,
+          purchase_date: purchaseDate,
+          created_by: user?.id,
+        }));
+
+        const { error } = await supabase
+          .from('purchases')
+          .insert(purchaseRecords);
+
+        if (error) throw error;
+
+        // Update product current stock for each product
+        for (const entry of validEntries) {
+          const { data: product } = await supabase
+            .from('products')
+            .select('current_stock')
+            .eq('id', entry.product_id)
+            .single();
+
+          if (product) {
+            await supabase
+              .from('products')
+              .update({ current_stock: product.current_stock + entry.quantity })
+              .eq('id', entry.product_id);
+          }
+        }
+
+        toast({
+          title: 'Success',
+          description: `${validEntries.length} purchase(s) logged successfully`,
+        });
       }
 
-      toast({
-        title: 'Success',
-        description: `${validEntries.length} purchase(s) logged successfully`,
-      });
-
-      // Reset quantities
-      setPurchaseEntries({});
-      // Refresh data
+      // Reset form and refresh data
+      resetForm();
       fetchData();
     } catch (error: any) {
       toast({
@@ -565,7 +754,10 @@ export default function PurchasesPage() {
                   )}
                 </div>
               </div>
-              <div className="mt-4">
+            </div>
+            
+            <div className="mt-4">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting || Object.values(purchaseEntries).every(qty => !qty)}
@@ -576,6 +768,11 @@ export default function PurchasesPage() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       <span className="whitespace-nowrap">Processing...</span>
                     </>
+                  ) : isEditMode ? (
+                    <>
+                      <ShoppingCart className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="whitespace-nowrap">Update Purchase</span>
+                    </>
                   ) : (
                     <>
                       <ShoppingCart className="mr-2 h-4 w-4 flex-shrink-0" />
@@ -583,13 +780,36 @@ export default function PurchasesPage() {
                     </>
                   )}
                 </Button>
+                
+                {isEditMode && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={resetForm}
+                    disabled={submitting}
+                    className="w-full sm:w-auto"
+                  >
+                    Cancel Edit
+                  </Button>
+                )}
+                
+                {!isEditMode && purchases.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => loadPurchaseForEditing(purchases[0].id)}
+                    disabled={submitting}
+                    className="w-full sm:w-auto bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200"
+                  >
+                    <Edit2 className="mr-2 h-4 w-4" />
+                    Edit Last Purchase
+                  </Button>
+                )}
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
-
-
     </div>
   );
 }

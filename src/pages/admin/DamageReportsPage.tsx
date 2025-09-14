@@ -6,9 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Calendar, Package } from 'lucide-react';
+import { AlertTriangle, Calendar, Package, Pencil, X, Save } from 'lucide-react';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/PaginationControls';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface DamageReportData {
   id: string;
@@ -17,7 +25,9 @@ interface DamageReportData {
   damage_date: string;
   created_at: string;
   created_by: string;
+  product_id: string;
   products: {
+    id: string;
     name: string;
     sku: string;
     price: number;
@@ -32,6 +42,14 @@ interface DamageStats {
 
 export default function DamageReportsPage() {
   const [damages, setDamages] = useState<DamageReportData[]>([]);
+  const [editingDamage, setEditingDamage] = useState<DamageReportData | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    quantity: 0,
+    reason: '',
+    damage_date: ''
+  });
   const [stats, setStats] = useState<DamageStats>({
     totalDamages: 0,
     totalValue: 0,
@@ -59,7 +77,7 @@ export default function DamageReportsPage() {
 
   const fetchDamageData = async () => {
     try {
-      // Fetch damage reports with product details only
+      // Fetch damage reports with product details
       const { data: damagesData, error: damagesError } = await supabase
         .from('damages')
         .select(`
@@ -69,7 +87,13 @@ export default function DamageReportsPage() {
           damage_date,
           created_at,
           created_by,
-          products!inner(name, sku, price)
+          product_id,
+          products!inner(
+            id,
+            name,
+            sku,
+            price
+          )
         `)
         .gte('damage_date', dateRange.from)
         .lte('damage_date', dateRange.to)
@@ -108,6 +132,156 @@ export default function DamageReportsPage() {
   const handleDateRangeChange = () => {
     setLoading(true);
     fetchDamageData();
+  };
+
+  const handleEditClick = (damage: DamageReportData) => {
+    setEditingDamage(damage);
+    setFormData({
+      quantity: damage.quantity,
+      reason: damage.reason,
+      damage_date: damage.damage_date
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'quantity' ? parseInt(value) || 0 : value
+    }));
+  };
+
+  const handleUpdateDamage = async () => {
+    if (!editingDamage) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      console.log('Updating damage record with data:', {
+        id: editingDamage.id,
+        ...formData
+      });
+      
+      // First, update the damage record
+      const { data: updateResponse, error: updateError } = await supabase
+        .from('damages')
+        .update({
+          quantity: formData.quantity,
+          reason: formData.reason,
+          damage_date: formData.damage_date
+        })
+        .eq('id', editingDamage.id)
+        .select()
+        .single();
+
+      console.log('Update response:', { updateResponse, updateError });
+      
+      if (updateError) {
+        console.error('Update error:', updateError);
+        throw new Error(`Failed to update damage record: ${updateError.message}`);
+      }
+
+      // Then, fetch the updated record with product details
+      const { data: updatedDamage, error: fetchError } = await supabase
+        .from('damages')
+        .select(`
+          id,
+          quantity,
+          reason,
+          damage_date,
+          created_at,
+          created_by,
+          product_id,
+          products!inner(
+            id,
+            name,
+            sku,
+            price
+          )
+        `)
+        .eq('id', editingDamage.id)
+        .single();
+
+      console.log('Fetch updated damage response:', { updatedDamage, fetchError });
+      
+      if (fetchError) {
+        console.error('Fetch error after update:', fetchError);
+        throw new Error(`Failed to fetch updated record: ${fetchError.message}`);
+      }
+      
+      if (!updatedDamage) {
+        throw new Error('No data returned after update');
+      }
+
+      // Update local state
+      setDamages(prevDamages => 
+        prevDamages.map(damage => 
+          damage.id === updatedDamage.id 
+            ? { ...updatedDamage, products: damage.products } 
+            : damage
+        )
+      );
+
+      // Update stats
+      const totalDamages = damages.reduce((sum, damage) => 
+        sum + (damage.id === updatedDamage.id ? updatedDamage.quantity : damage.quantity), 0);
+      
+      const totalValue = damages.reduce((sum, damage) => {
+        const quantity = damage.id === updatedDamage.id ? updatedDamage.quantity : damage.quantity;
+        return sum + (quantity * Number(damage.products.price));
+      }, 0);
+
+      // Recent damages (last 7 days)
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const recentDamages = damages.reduce((sum, damage) => {
+        const quantity = damage.id === updatedDamage.id ? updatedDamage.quantity : damage.quantity;
+        return damage.damage_date >= weekAgo ? sum + quantity : sum;
+      }, 0);
+
+      setStats({
+        totalDamages,
+        totalValue,
+        recentDamages,
+      });
+
+      toast({
+        title: 'Success',
+        description: 'Damage report updated successfully',
+      });
+
+      setIsEditDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error updating damage report:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update damage report',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getLastReport = () => {
+    if (damages.length === 0) return null;
+    // Sort by created_at in descending order and get the first one
+    return [...damages].sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0];
+  };
+  
+  const handleEditLastReport = () => {
+    const lastReport = getLastReport();
+    if (lastReport) {
+      handleEditClick(lastReport);
+    } else {
+      toast({
+        title: 'No reports',
+        description: 'There are no damage reports to edit',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (loading) {
@@ -195,6 +369,15 @@ export default function DamageReportsPage() {
         <div>
           <h1 className="text-lg md:text-xl font-semibold tracking-tight">Damage Reports</h1>
         </div>
+        <Button 
+          onClick={handleEditLastReport}
+          variant="outline" 
+          size="sm"
+          className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+        >
+          <Pencil className="h-4 w-4 mr-2" />
+          Edit Last Report
+        </Button>
       </div>
 
       <Card className="border shadow-sm overflow-hidden">
@@ -314,6 +497,7 @@ export default function DamageReportsPage() {
                   <TableHead className="whitespace-nowrap">Quantity</TableHead>
                   <TableHead className="whitespace-nowrap">Value</TableHead>
                   <TableHead className="whitespace-nowrap">Reason</TableHead>
+                  <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -340,6 +524,16 @@ export default function DamageReportsPage() {
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate" title={damage.reason}>
                       {damage.reason}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditClick(damage)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -371,6 +565,69 @@ export default function DamageReportsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Damage Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Damage Report</DialogTitle>
+            <DialogDescription>
+              Update the damage report details below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="damage_date">Date</Label>
+              <Input
+                id="damage_date"
+                name="damage_date"
+                type="date"
+                value={formData.damage_date}
+                onChange={handleInputChange}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input
+                id="quantity"
+                name="quantity"
+                type="number"
+                min="1"
+                value={formData.quantity}
+                onChange={handleInputChange}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reason">Reason</Label>
+              <textarea
+                id="reason"
+                name="reason"
+                value={formData.reason}
+                onChange={handleInputChange}
+                className="flex h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Enter reason for damage"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdateDamage}
+              disabled={isSubmitting || !formData.quantity || !formData.reason || !formData.damage_date}
+            >
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
