@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { DataExport } from '@/components/DataExport';
-import { BarChart3, TrendingUp, Package, DollarSign } from 'lucide-react';
+import { BarChart3, TrendingUp, Package, DollarSign, Download } from 'lucide-react';
+import { generateSalesReportPDF, downloadPDF } from '@/lib/pdfUtils';
 
 interface SalesData {
   id: string;
@@ -42,6 +43,7 @@ export default function ReportsPage() {
     from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     to: new Date().toISOString().split('T')[0],
   });
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -59,7 +61,7 @@ export default function ReportsPage() {
 
   const fetchReportsData = async () => {
     try {
-      // Fetch sales data
+      // Fetch sales data with category information
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
         .select(`
@@ -67,7 +69,13 @@ export default function ReportsPage() {
           quantity,
           revenue,
           sale_date,
-          products!inner(name, sku)
+          products!inner(
+            name,
+            sku,
+            categories (
+              name
+            )
+          )
         `)
         .gte('sale_date', dateRange.from)
         .lte('sale_date', dateRange.to)
@@ -123,6 +131,152 @@ export default function ReportsPage() {
   const handleDateRangeChange = () => {
     setLoading(true);
     fetchReportsData();
+  };
+
+  interface Product {
+    name: string;
+    sku: string;
+    price: number;
+    categories: {
+      name: string;
+    } | null;
+  }
+
+  interface SaleWithProduct {
+    id: string;
+    quantity: number;
+    revenue: number;
+    sale_date: string;
+    products: Product;
+  }
+
+  interface DamageWithProduct {
+    id: string;
+    quantity: number;
+    reason: string;
+    damage_date: string;
+    products: Product;
+  }
+
+  interface FormattedSale {
+    id: string;
+    quantity: number;
+    revenue: number;
+    sale_date: string;
+    category_name: string;
+    product_name: string;
+    unit_price: number;
+  }
+
+  interface FormattedDamage {
+    id: string;
+    quantity: number;
+    reason: string;
+    damage_date: string;
+    category_name: string;
+    product_name: string;
+    unit_price: number;
+  }
+
+  const handleExportPDF = async () => {
+    try {
+      setIsGeneratingPDF(true);
+      
+      // Fetch sales data with category information for PDF
+      const { data: salesData, error: salesError } = await supabase
+        .from('sales')
+        .select(`
+          id,
+          quantity,
+          revenue,
+          sale_date,
+          products (
+            name,
+            sku,
+            price,
+            categories (
+              name
+            )
+          )
+        `)
+        .gte('sale_date', dateRange.from)
+        .lte('sale_date', dateRange.to)
+        .order('sale_date', { ascending: false });
+
+      if (salesError) throw salesError;
+
+      // Fetch damage data for the same period
+      const { data: damageData, error: damageError } = await supabase
+        .from('damages')
+        .select(`
+          id,
+          quantity,
+          reason,
+          damage_date,
+          products (
+            name,
+            sku,
+            price,
+            categories (
+              name
+            )
+          )
+        `)
+        .gte('damage_date', dateRange.from)
+        .lte('damage_date', dateRange.to)
+        .order('damage_date', { ascending: false });
+
+      if (damageError) throw damageError;
+
+      // Flatten the nested data structure
+      const formattedSales: FormattedSale[] = (salesData || []).map(sale => ({
+        id: sale.id,
+        quantity: sale.quantity,
+        revenue: sale.revenue,
+        sale_date: sale.sale_date,
+        category_name: sale.products?.categories?.name || 'Uncategorized',
+        product_name: sale.products?.name || 'Unknown Product',
+        unit_price: sale.products?.price || 0,
+      }));
+
+      const formattedDamages: FormattedDamage[] = (damageData || []).map(damage => ({
+        id: damage.id,
+        quantity: damage.quantity,
+        reason: damage.reason || '',
+        damage_date: damage.damage_date,
+        category_name: damage.products?.categories?.name || 'Uncategorized',
+        product_name: damage.products?.name || 'Unknown Product',
+        unit_price: damage.products?.price || 0,
+      }));
+
+      // Generate and download PDF
+      const reportDate = dateRange.from === dateRange.to 
+        ? dateRange.from 
+        : `${dateRange.from} to ${dateRange.to}`;
+      
+      const doc = await generateSalesReportPDF(
+        formattedSales,
+        formattedDamages,
+        reportDate
+      );
+      
+      const filename = `Regal-Sales-Report-${new Date().toISOString().split('T')[0]}.pdf`;
+      downloadPDF(doc, filename);
+      
+      toast({
+        title: 'Success',
+        description: 'PDF report generated successfully',
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF report',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   if (loading) {
@@ -236,6 +390,15 @@ export default function ReportsPage() {
               className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs sm:text-sm shadow-sm transition-all hover:scale-[1.02] py-1 h-8 px-3"
             >
               Apply Filter
+            </Button>
+            <Button 
+              onClick={handleExportPDF}
+              disabled={isGeneratingPDF}
+              variant="outline"
+              className="w-full sm:w-auto flex items-center gap-1.5 text-xs sm:text-sm h-8 px-3"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {isGeneratingPDF ? 'Generating...' : 'Export PDF'}
             </Button>
           </div>
         </CardContent>
@@ -359,3 +522,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+
