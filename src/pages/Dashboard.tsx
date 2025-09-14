@@ -121,16 +121,16 @@ export default function Dashboard() {
     return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="space-y-6 relative">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200 hover:shadow-lg transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
               <CardTitle className="text-sm font-medium text-blue-800">Total Products</CardTitle>
               <div className="p-2 rounded-lg bg-blue-500/10">
                 <Package className="h-4 w-4 text-blue-600" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-900">
+            <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
+              <div className="text-xl sm:text-2xl font-bold text-blue-900">
                 {loading ? '--' : stats.totalProducts}
               </div>
               <p className="text-xs text-blue-600">
@@ -139,15 +139,15 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200 hover:shadow-lg transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="h-full bg-gradient-to-br from-green-50 to-emerald-100 border-green-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
               <CardTitle className="text-sm font-medium text-green-800">Recent Purchases</CardTitle>
               <div className="p-2 rounded-lg bg-green-500/10">
                 <ShoppingCart className="h-4 w-4 text-green-600" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-900">
+            <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
+              <div className="text-xl sm:text-2xl font-bold text-green-900">
                 {loading ? '--' : stats.recentPurchases}
               </div>
               <p className="text-xs text-green-600">
@@ -158,15 +158,15 @@ export default function Dashboard() {
 
           {(profile?.role === 'admin' || profile?.role === 'super_admin') && (
             <>
-              <Card className="bg-gradient-to-br from-purple-50 to-violet-100 border-purple-200 hover:shadow-lg transition-all duration-300">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Card className="h-full bg-gradient-to-br from-purple-50 to-violet-100 border-purple-200 hover:shadow-lg transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
                   <CardTitle className="text-sm font-medium text-purple-800">Total Sales</CardTitle>
                   <div className="p-2 rounded-lg bg-purple-500/10">
                     <TrendingUp className="h-4 w-4 text-purple-600" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-purple-900">
+                <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
+                  <div className="text-xl sm:text-2xl font-bold text-purple-900">
                     {loading ? 'Rs--' : `Rs ${stats.totalSales.toFixed(2)}`}
                   </div>
                   <p className="text-xs text-purple-600">
@@ -175,15 +175,15 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-orange-50 to-amber-100 border-orange-200 hover:shadow-lg transition-all duration-300">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Card className="h-full bg-gradient-to-br from-orange-50 to-amber-100 border-orange-200 hover:shadow-lg transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
                   <CardTitle className="text-sm font-medium text-orange-800">Damage Reports</CardTitle>
                   <div className="p-2 rounded-lg bg-orange-500/10">
                     <AlertTriangle className="h-4 w-4 text-orange-600" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-900">
+                <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
+                  <div className="text-xl sm:text-2xl font-bold text-orange-900">
                     {loading ? '--' : stats.recentDamages}
                   </div>
                   <p className="text-xs text-orange-600">
@@ -203,7 +203,7 @@ export default function Dashboard() {
                 Common tasks for your role
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
               <div className="grid gap-3">
                 {/* Staff Actions */}
                 {(profile?.role === 'staff' || profile?.role === 'admin' || profile?.role === 'super_admin') && (
@@ -257,7 +257,7 @@ export default function Dashboard() {
                 Sales performance for the last 7 days
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
               {(profile?.role === 'admin' || profile?.role === 'super_admin') ? (
                 <div className="h-[300px]">
                   <ChartContainer

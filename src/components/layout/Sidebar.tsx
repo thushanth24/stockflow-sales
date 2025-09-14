@@ -21,6 +21,7 @@ import {
   Shield,
   LogOut,
   LayoutDashboard,
+  RefreshCw,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -55,8 +56,9 @@ export function Sidebar() {
     { icon: Package2, label: 'Products', href: '/dashboard/products' },
     { icon: Package, label: 'Categories', href: '/dashboard/categories' },
     { icon: ShoppingCart, label: 'Add Purchase', href: '/dashboard/purchases' },
-    { icon: ClipboardList, label: 'Stock Update', href: '/dashboard/stock-update' },
+    { icon: ClipboardList, label: 'Sales Entry', href: '/dashboard/stock-update' },
     { icon: AlertTriangle, label: 'Report Damage', href: '/dashboard/damages' },
+    { icon: RefreshCw, label: 'Returns', href: '/dashboard/returns' },
   ];
 
   const adminItems = [
@@ -133,7 +135,7 @@ export function Sidebar() {
                       icon: 'text-emerald-600',
                       text: 'text-emerald-800'
                     };
-                  case 'Stock Update':
+                  case 'Sales Entry':
                     return {
                       active: 'from-blue-500 to-indigo-600',
                       hover: 'from-blue-400 to-indigo-500',

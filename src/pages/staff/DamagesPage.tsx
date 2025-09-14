@@ -190,37 +190,96 @@ export default function DamagesPage() {
     }
 
     setSubmitting(true);
+    console.log('Starting damage report submission...');
     
     try {
-      // Insert all damage records
-      const damageRecords = validEntries.map(entry => ({
+      // First, verify stock levels
+      const productIds = damageEntries.map(entry => entry.product_id);
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('id, current_stock, name')
+        .in('id', productIds);
+
+      if (productsError) throw productsError;
+
+      // Create a map of product ID to current stock
+      const productStockMap = new Map(products.map(p => [p.id, p]));
+
+      console.log('Valid entries to process:', validEntries);
+      
+      // Check stock levels
+      for (const entry of validEntries) {
+        const product = productStockMap.get(entry.product_id);
+        console.log('Checking stock for product:', { 
+          productId: entry.product_id, 
+          requestedQuantity: entry.quantity,
+          currentStock: product?.current_stock,
+          productName: product?.name
+        });
+        
+        if (!product) {
+          const errorMsg = `Product not found: ${entry.product_id}`;
+          console.error(errorMsg);
+          throw new Error(errorMsg);
+        }
+        if (product.current_stock < entry.quantity) {
+          const errorMsg = `Insufficient stock for product: ${product.name}. Available: ${product.current_stock}`;
+          console.error(errorMsg);
+          throw new Error(errorMsg);
+        }
+      }
+
+      // Prepare the damage data
+      const damageData = validEntries.map(entry => ({
         product_id: entry.product_id,
         quantity: entry.quantity,
         reason: entry.reason,
         damage_date: damageDate,
-        created_by: user?.id,
+        created_by: user?.id
       }));
+      
+      console.log('Sending damage data to server:', JSON.stringify(damageData, null, 2));
+      
+      // Start a transaction
+      const { data, error: transactionError } = await supabase.rpc('handle_damage_report', {
+        damage_data: damageData
+      });
+      
+      console.log('Server response:', { data, error: transactionError });
 
-      const { error } = await supabase
-        .from('damages')
-        .insert(damageRecords);
+      if (transactionError) {
+        console.error('Transaction error:', transactionError);
+        throw transactionError;
+      }
 
-      if (error) throw error;
-
+      console.log('Successfully processed damage report. Response:', data);
+      
       toast({
         title: 'Success',
-        description: `Rs{validEntries.length} damage report(s) submitted successfully`,
+        description: `${validEntries.length} damage report(s) submitted successfully`,
       });
 
+      // Clear the form
       setDamageEntries([]);
-      fetchData();
+      
+      // Refresh the data
+      console.log('Refreshing damage data...');
+      await fetchData();
+      console.log('Data refresh complete');
     } catch (error: any) {
+      console.error('Error in handleSubmit:', error);
+      
+      // Log more details if available
+      if (error.details) console.error('Error details:', error.details);
+      if (error.hint) console.error('Error hint:', error.hint);
+      
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'An error occurred while processing your request',
         variant: 'destructive',
       });
     } finally {
+      console.log('Submission completed');
       setSubmitting(false);
     }
   };
