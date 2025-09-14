@@ -21,9 +21,9 @@ export default defineConfig({
       },
       manifest: {
         id: '/',
-        name: 'Stockflow Sales',
-        short_name: 'Stockflow',
-        description: 'Stockflow Sales Application - Manage your inventory and sales',
+        name: 'Regal',
+        short_name: 'Regal',
+        description: 'Regal - Manage your inventory and sales',
         theme_color: '#3B82F6',
         background_color: '#ffffff',
         display: 'standalone',

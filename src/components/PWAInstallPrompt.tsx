@@ -88,7 +88,7 @@ export const PWAInstallPrompt: React.FC = () => {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-              Install Stockflow Sales
+              Install Regal
             </h3>
             <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">
               Install this app on your device for quick access and offline functionality.

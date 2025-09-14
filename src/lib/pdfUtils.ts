@@ -251,10 +251,10 @@ export const generateSalesReportPDF = async (salesData: FormattedItem[], damageD
     }
     
     const damageColumns = [
-      { name: 'CATEGORY', width: 60, key: 'category_name' as keyof FormattedItem },
-      { name: 'PRODUCT', width: 100, key: 'product_name' as keyof FormattedItem },
-      { name: 'QTY', width: 30, align: 'right' as const, key: 'quantity' as keyof FormattedItem },
-      { name: 'VALUE', width: 50, align: 'right' as const, key: 'revenue' as keyof FormattedItem }
+      { name: 'CATEGORY', width: 45, key: 'category_name' as keyof FormattedItem },
+      { name: 'PRODUCT', width: 80, key: 'product_name' as keyof FormattedItem },
+      { name: 'QTY', width: 25, align: 'right' as const, key: 'quantity' as keyof FormattedItem },
+      { name: 'VALUE', width: 40, align: 'right' as const, key: 'revenue' as keyof FormattedItem }
     ];
     
     // Format the damage data to include the total value
