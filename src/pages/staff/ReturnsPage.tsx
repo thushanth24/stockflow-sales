@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { RefreshCw, Package, Loader2, Calendar } from 'lucide-react';
+import { RefreshCw, Package, Loader2, Calendar, Download } from 'lucide-react';
+import { generateSalesReportPDF, downloadPDF, FormattedItem } from '@/lib/pdfUtils';
 
 interface Category {
   id: string;
@@ -35,6 +36,7 @@ function ReturnsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [returns, setReturns] = useState<any[]>([]);
   const [returnDate, setReturnDate] = useState(new Date().toISOString().split('T')[0]);
   const [newReturn, setNewReturn] = useState<ReturnEntry>({
     product_id: '',
@@ -72,6 +74,29 @@ function ReturnsPage() {
         
       if (categoriesError) throw categoriesError;
       setCategories(categoriesData || []);
+      
+      // Fetch returns data
+      const { data: returnsData, error: returnsError } = await supabase
+        .from('returns')
+        .select(`
+          id,
+          quantity,
+          reason,
+          return_date,
+          products (
+            id,
+            name,
+            sku,
+            price,
+            categories (
+              name
+            )
+          )
+        `)
+        .order('return_date', { ascending: false });
+        
+      if (returnsError) throw returnsError;
+      setReturns(returnsData || []);
       
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -234,12 +259,62 @@ function ReturnsPage() {
     }
   };
 
+  const handleExportPDF = async () => {
+    try {
+      setLoading(true);
+      
+      // Format returns data for PDF
+      const formattedReturns: FormattedItem[] = returns.map((ret: any) => ({
+        id: ret.id,
+        category_name: ret.products?.categories?.name || 'Uncategorized',
+        product_name: ret.products?.name || 'Unknown Product',
+        quantity: ret.quantity,
+        unit_price: ret.products?.selling_price || 0,
+        reason: ret.reason,
+        return_date: ret.return_date,
+        revenue: (ret.products?.selling_price || 0) * ret.quantity
+      }));
+      
+      // Generate PDF with only returns data
+      const doc = await generateSalesReportPDF([], [], new Date().toISOString().split('T')[0], formattedReturns);
+      
+      // Download the PDF
+      downloadPDF(doc, 'returns_report');
+      
+      toast({
+        title: 'Success',
+        description: 'Returns report exported successfully',
+      });
+      
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to export returns report',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 pb-24">
       {/* Header */}
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">New Return</h1>
-        <p className="text-gray-500 text-sm">Record a product return</p>
+      <header className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">New Return</h1>
+          <p className="text-gray-500 text-sm">Record a product return</p>
+        </div>
+        <Button 
+          onClick={handleExportPDF} 
+          variant="outline" 
+          className="flex items-center gap-2"
+          disabled={returns.length === 0 || loading}
+        >
+          <Download className="h-4 w-4" />
+          Export Returns
+        </Button>
       </header>
 
       {/* Form */}

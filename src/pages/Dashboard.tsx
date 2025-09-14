@@ -148,15 +148,19 @@ export default function Dashboard() {
       }));
 
       // Format returns data
-      const formattedReturns = (returnsData || []).map(returnItem => ({
-        id: returnItem.id,
-        quantity: returnItem.quantity,
-        reason: returnItem.reason || '',
-        return_date: returnItem.return_date,
-        category_name: returnItem.products?.categories?.name || 'Uncategorized',
-        product_name: returnItem.products?.name || 'Unknown Product',
-        unit_price: returnItem.products?.price || 0,
-      }));
+      const formattedReturns = (returnsData || []).map(returnItem => {
+        const unitPrice = returnItem.products?.price || 0;
+        return {
+          id: returnItem.id,
+          quantity: returnItem.quantity,
+          reason: returnItem.reason || '',
+          return_date: returnItem.return_date,
+          category_name: returnItem.products?.categories?.name || 'Uncategorized',
+          product_name: returnItem.products?.name || 'Unknown Product',
+          unit_price: unitPrice,
+          revenue: returnItem.quantity * unitPrice, // Calculate the total value of the return
+        };
+      });
 
       const reportDate = dateRange.from === dateRange.to 
         ? dateRange.from 
