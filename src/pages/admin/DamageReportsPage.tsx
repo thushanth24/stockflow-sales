@@ -111,7 +111,82 @@ export default function DamageReportsPage() {
   };
 
   if (loading) {
-    return <div>Loading damage reports...</div>;
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-6">
+          {/* Header Skeleton */}
+          <div className="p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg h-16">
+            <div className="h-6 bg-blue-500/30 rounded w-1/3"></div>
+          </div>
+          
+          {/* Date Range Picker Skeleton */}
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="h-5 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <div className="h-10 bg-gray-100 rounded-md"></div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <div className="h-10 bg-gray-100 rounded-md"></div>
+              </div>
+              <div className="flex items-end">
+                <div className="h-10 bg-blue-100 rounded-md w-24"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Stats Grid Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-8 w-8 bg-gray-100 rounded-full"></div>
+                </div>
+                <div className="h-6 bg-gray-100 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Reports Table Skeleton */}
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="h-5 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="space-y-3">
+              {/* Table Header */}
+              <div className="grid grid-cols-5 gap-4 pb-2 border-b">
+                {['Date', 'Product', 'Qty', 'Value', 'Reason'].map((_, i) => (
+                  <div key={i} className="h-4 bg-gray-200 rounded"></div>
+                ))}
+              </div>
+              
+              {/* Table Rows */}
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="grid grid-cols-5 gap-4 py-3 border-b">
+                  <div className="h-4 bg-gray-100 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-100 rounded"></div>
+                  <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-100 rounded w-1/3"></div>
+                  <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Pagination Skeleton */}
+            <div className="flex justify-between items-center mt-4 pt-4 border-t">
+              <div className="h-4 bg-gray-100 rounded w-24"></div>
+              <div className="flex space-x-2">
+                <div className="h-8 w-24 bg-gray-100 rounded-md"></div>
+                <div className="h-8 w-8 bg-gray-100 rounded-md"></div>
+                <div className="h-8 w-8 bg-gray-100 rounded-md"></div>
+                <div className="h-8 w-24 bg-gray-100 rounded-md"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

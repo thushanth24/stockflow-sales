@@ -140,7 +140,37 @@ export default function CategoriesPage() {
   };
 
   if (isLoading) {
-    return <div>Loading categories...</div>;
+    return (
+      <div className="w-full max-w-7xl mx-auto px-6 py-8">
+        <div className="animate-pulse space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex flex-col md:flex-row justify-between items-start gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl h-36">
+            <div className="space-y-4 w-full">
+              <div className="h-10 bg-blue-500/30 rounded w-1/3"></div>
+              <div className="h-4 bg-blue-500/30 rounded w-1/2 max-w-md"></div>
+            </div>
+            <div className="h-10 bg-blue-500/30 rounded-lg w-40"></div>
+          </div>
+          
+          {/* Categories Grid Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100">
+                <div className="p-6 space-y-4">
+                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-100 rounded w-full"></div>
+                  <div className="h-4 bg-gray-100 rounded w-5/6"></div>
+                  <div className="flex justify-between items-center pt-4">
+                    <div className="h-8 bg-gray-100 rounded-full w-24"></div>
+                    <div className="h-8 bg-gray-100 rounded-lg w-16"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -144,7 +144,89 @@ export default function StockOverviewPage() {
   const outOfStockProducts = filteredProducts.filter(p => p.current_stock === 0);
 
   if (loading) {
-    return <div>Loading stock overview...</div>;
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-6">
+          {/* Header Skeleton */}
+          <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl h-28">
+            <div className="h-8 bg-blue-500/30 rounded w-1/3 mb-2"></div>
+            <div className="h-4 bg-blue-500/30 rounded w-1/2 max-w-md"></div>
+          </div>
+          
+          {/* Filter Skeleton */}
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div className="h-10 bg-gray-100 rounded-md w-64"></div>
+          </div>
+          
+          {/* Stats Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                  <div className="h-8 w-8 bg-gray-100 rounded-full"></div>
+                </div>
+                <div className="h-6 bg-gray-100 rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-gray-100 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Stock Levels Skeleton */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
+            
+            {/* Table Header Skeleton */}
+            <div className="hidden sm:grid grid-cols-4 gap-4 mb-4">
+              {['Product', 'SKU', 'Stock', 'Status'].map((_, i) => (
+                <div key={i} className="h-4 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+            
+            {/* Table Rows Skeleton */}
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 border-b">
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-100 rounded w-1/2 sm:hidden"></div>
+                  </div>
+                  <div className="hidden sm:block">
+                    <div className="h-4 bg-gray-100 rounded w-3/4"></div>
+                  </div>
+                  <div className="hidden sm:block">
+                    <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                  </div>
+                  <div className="hidden sm:block">
+                    <div className="h-6 bg-gray-100 rounded-full w-20"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Recent Updates Skeleton */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="h-6 bg-gray-200 rounded w-1/4 mb-6"></div>
+            
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="p-4 border rounded-lg">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                      <div className="h-3 bg-gray-100 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                    </div>
+                    <div className="h-8 bg-gray-100 rounded-full w-24"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

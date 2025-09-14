@@ -227,9 +227,69 @@ export default function DamagesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Loading damage reports...</span>
+      <div className="w-full max-w-7xl mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex flex-col md:flex-row justify-between items-start gap-4 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl h-28">
+            <div className="space-y-3 w-full">
+              <div className="h-8 bg-blue-500/30 rounded w-1/3"></div>
+              <div className="h-4 bg-blue-500/30 rounded w-1/2 max-w-md"></div>
+            </div>
+          </div>
+          
+          {/* Form Skeleton */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="space-y-6">
+              {/* Date Picker Skeleton */}
+              <div className="space-y-2">
+                <div className="h-5 bg-gray-200 rounded w-24"></div>
+                <div className="h-10 bg-gray-100 rounded-md w-48"></div>
+              </div>
+              
+              {/* Search and Filter Skeleton */}
+              <div className="space-y-3">
+                <div className="h-5 bg-gray-200 rounded w-24"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="h-10 bg-gray-100 rounded-md"></div>
+                  <div className="h-10 bg-gray-100 rounded-md"></div>
+                </div>
+              </div>
+              
+              {/* Table Skeleton */}
+              <div className="space-y-4">
+                <div className="h-5 bg-gray-200 rounded w-32"></div>
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="grid grid-cols-4 gap-4 p-4 border-b border-gray-100">
+                      <div className="space-y-2">
+                        <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="h-8 bg-gray-100 rounded-md w-16"></div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="h-8 bg-gray-100 rounded-md w-20"></div>
+                      </div>
+                      <div className="flex items-center justify-end">
+                        <div className="h-10 bg-gray-100 rounded-md w-10"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Action Buttons Skeleton */}
+              <div className="flex justify-between items-center pt-4">
+                <div className="h-8 bg-gray-100 rounded-md w-24"></div>
+                <div className="flex space-x-2">
+                  <div className="h-10 bg-gray-100 rounded-md w-24"></div>
+                  <div className="h-10 bg-red-100 rounded-md w-32"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
