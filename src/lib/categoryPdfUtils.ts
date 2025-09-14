@@ -1,21 +1,22 @@
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 
-// Interface for sales and inventory items
-export interface FormattedItem {
+// Interface for product data used in category stock reports
+export interface ProductWithStock {
   id: string;
-  quantity: number;
-  reason?: string;
-  return_date?: string;
-  damage_date?: string;
-  sale_date?: string;
-  category_name: string;
-  product_name: string;
-  unit_price: number;
-  revenue?: number;
+  name: string;
+  sku: string;
+  price: number;
+  current_stock: number;
+  category_name?: string;
 }
 
-export const generateSalesReportPDF = async (salesData: FormattedItem[], damageData: FormattedItem[], date: string, returnsData: FormattedItem[] = []) => {
+/**
+ * Generates a PDF report for a specific category's stock
+ * @param categoryName - Name of the category
+ * @param products - Array of products in the category
+ * @returns jsPDF document
+ */
+export const generateCategoryStockPDF = (categoryName: string, products: ProductWithStock[]) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 15;
@@ -30,12 +31,12 @@ export const generateSalesReportPDF = async (salesData: FormattedItem[], damageD
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('SALES REPORT', pageWidth / 2, 25, { align: 'center' });
+  doc.text(`CATEGORY STOCK REPORT: ${categoryName.toUpperCase()}`, pageWidth / 2, 25, { align: 'center' });
   
   // Subtitle with date
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Report Period: ${new Date(date).toLocaleDateString('en-US', { 
+  doc.text(`Generated on: ${new Date().toLocaleDateString('en-US', { 
     year: 'numeric', 
     month: 'long', 
     day: 'numeric' 
@@ -43,21 +44,12 @@ export const generateSalesReportPDF = async (salesData: FormattedItem[], damageD
   
   // Reset text color for content
   doc.setTextColor(0, 0, 0);
-  yPos = 55;
-
-  // Sales Table Header
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(59, 130, 246); // Blue-600
-  doc.text('SALES DETAILS', margin, yPos);
-  yPos += 10;
+  yPos = 60;
 
   // Column widths
-  const col1 = margin + 2;
-  const col2 = col1 + 60;
-  const col3 = pageWidth - margin - 120;
-  const col4 = pageWidth - margin - 70;
-  const col5 = pageWidth - margin - 10;
+  const col1 = margin + 2; // Product name
+  const col2 = pageWidth - margin - 120; // Stock
+  const col3 = pageWidth - margin - 10; // Price
 
   // Table Headers with background
   doc.setFillColor(248, 250, 252); // Cool gray-50
@@ -69,26 +61,20 @@ export const generateSalesReportPDF = async (salesData: FormattedItem[], damageD
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30, 41, 59); // Slate-800
-  doc.text('CATEGORY', col1, yPos + 7);
-  doc.text('PRODUCT', col2, yPos + 7);
-  doc.text('QTY', col3, yPos + 7, { align: 'right' });
-  doc.text('PRICE', col4, yPos + 7, { align: 'right' });
-  doc.text('TOTAL', col5, yPos + 7, { align: 'right' });
+  doc.text('PRODUCT', col1, yPos + 7);
+  doc.text('STOCK', col2, yPos + 7, { align: 'right' });
+  doc.text('PRICE', col3, yPos + 7, { align: 'right' });
   yPos += 12;
 
   // Table Rows
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  let totalSales = 0;
   
-  salesData.forEach((sale, index) => {
+  products.forEach((product, index) => {
     if (yPos > 250) {
       doc.addPage();
       yPos = 20;
     }
-    
-    const rowTotal = sale.quantity * sale.unit_price;
-    totalSales += rowTotal;
     
     // Row background
     const rowBg = index % 2 === 0 ? [255, 255, 255] : [248, 250, 252];
@@ -99,24 +85,15 @@ export const generateSalesReportPDF = async (salesData: FormattedItem[], damageD
     doc.setDrawColor(226, 232, 240); // Gray-200
     doc.roundedRect(margin, yPos - 2, pageWidth - (margin * 2), 10, 2, 2, 'S');
     
-    // Category
-    doc.setTextColor(100, 116, 139); // Slate-500
-    doc.text(sale.category_name, col1, yPos + 6, { maxWidth: 50 });
-    
     // Product name
     doc.setTextColor(15, 23, 42); // Slate-900
-    doc.text(sale.product_name, col2, yPos + 6, { maxWidth: 100 });
+    doc.text(product.name, col1, yPos + 6, { maxWidth: 150 });
     
-    // Quantity
-    doc.text(sale.quantity.toString(), col3, yPos + 6, { align: 'right' });
+    // Stock
+    doc.text(product.current_stock.toString(), col2, yPos + 6, { align: 'right' });
     
     // Price
-    doc.text(`Rs ${sale.unit_price.toFixed(2)}`, col4, yPos + 6, { align: 'right' });
-    
-    // Total
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Rs ${rowTotal.toFixed(2)}`, col5, yPos + 6, { align: 'right' });
-    doc.setFont('helvetica', 'normal');
+    doc.text(`Rs ${product.price.toFixed(2)}`, col3, yPos + 6, { align: 'right' });
     
     yPos += 12;
   });
@@ -124,17 +101,34 @@ export const generateSalesReportPDF = async (salesData: FormattedItem[], damageD
   // Add summary section
   yPos += 10;
   
+  // Calculate totals
+  const totalProducts = products.length;
+  const totalStock = products.reduce((sum, product) => sum + product.current_stock, 0);
+  const totalValue = products.reduce((sum, product) => sum + (product.current_stock * product.price), 0);
+  
   // Total row with accent color
   doc.setFillColor(241, 245, 249); // Slate-100
-  doc.roundedRect(margin, yPos - 2, pageWidth - (margin * 2), 20, 2, 2, 'F');
+  doc.roundedRect(margin, yPos - 2, pageWidth - (margin * 2), 30, 2, 2, 'F');
   doc.setDrawColor(203, 213, 225); // Slate-300
-  doc.roundedRect(margin, yPos - 2, pageWidth - (margin * 2), 20, 2, 2, 'S');
+  doc.roundedRect(margin, yPos - 2, pageWidth - (margin * 2), 30, 2, 2, 'S');
   
   doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(15, 23, 42); // Slate-900
+  
+  // Total Products
+  doc.text(`Total Products:`, margin + 10, yPos + 8);
+  doc.text(totalProducts.toString(), col3, yPos + 8, { align: 'right' });
+  
+  // Total Stock
+  doc.text(`Total Stock:`, margin + 10, yPos + 16);
+  doc.text(totalStock.toString(), col3, yPos + 16, { align: 'right' });
+  
+  // Total Value
   doc.setFontSize(11);
-  doc.text('TOTAL SALES:', margin + 10, yPos + 12);
+  doc.text(`Total Value:`, margin + 10, yPos + 26);
   doc.setTextColor(59, 130, 246); // Blue-600
-  doc.text(`Rs ${totalSales.toFixed(2)}`, col5, yPos + 12, { align: 'right' });
+  doc.text(`Rs ${totalValue.toFixed(2)}`, col3, yPos + 26, { align: 'right' });
   
   // Add footer with timestamp
   doc.setFont('helvetica', 'italic');
@@ -150,7 +144,11 @@ export const generateSalesReportPDF = async (salesData: FormattedItem[], damageD
   return doc;
 };
 
-// Function to download a PDF document
+/**
+ * Downloads a PDF document
+ * @param doc - The jsPDF document to download
+ * @param filename - Base name for the file
+ */
 export const downloadPDF = (doc: jsPDF, filename: string) => {
   doc.save(`${filename}_${new Date().toISOString().split('T')[0]}.pdf`);
 };

@@ -17,7 +17,7 @@ const navigationItems = [
   },
   {
     id: 'stock-update',
-    label: 'Stock Update',
+    label: 'Sales',
     icon: Package,
     path: '/dashboard/stock-update',
   },

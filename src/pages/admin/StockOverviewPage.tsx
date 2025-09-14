@@ -3,11 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Package, AlertTriangle, TrendingDown, Filter } from 'lucide-react';
+import { Package, AlertTriangle, TrendingDown, Filter, Download } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/PaginationControls';
+import { generateCategoryStockPDF, downloadPDF } from '@/lib/categoryPdfUtils';
 
 interface Category {
   id: string;
@@ -92,6 +94,54 @@ export default function StockOverviewPage() {
       setFilteredProducts(products.filter(product => product.category_id === categoryId));
     } else {
       setFilteredProducts([]);
+    }
+  };
+
+  const handleExportCategoryPDF = async () => {
+    if (selectedCategory === 'none' || selectedCategory === 'all') {
+      toast({
+        title: 'Please select a specific category',
+        description: 'You need to select a specific category to export.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const category = categories.find(cat => cat.id === selectedCategory);
+      if (!category) return;
+
+      // Get products for the selected category
+      const categoryProducts = products.filter(
+        product => product.category_id === selectedCategory
+      );
+
+      // Generate and download PDF
+      const doc = generateCategoryStockPDF(
+        category.name,
+        categoryProducts.map(p => ({
+          id: p.id,
+          name: p.name,
+          sku: p.sku,
+          price: p.price,
+          current_stock: p.current_stock,
+          category_name: p.categories?.name || 'Uncategorized'
+        }))
+      );
+      
+      downloadPDF(doc, `stock_report_${category.name.toLowerCase().replace(/\s+/g, '_')}`);
+      
+      toast({
+        title: 'PDF Exported',
+        description: `Stock report for ${category.name} has been exported successfully.`,
+      });
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to export PDF. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -236,18 +286,18 @@ export default function StockOverviewPage() {
           <h1 className="text-2xl md:text-4xl font-bold tracking-tight">Stock Overview</h1>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mt-4 md:mt-0 w-full md:w-auto">
-          <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-lg w-full sm:w-auto">
-            <Filter className="h-4 w-4" />
+          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg w-full sm:w-auto">
+            <Filter className="h-4 w-4 text-white" />
             <Select 
               value={selectedCategory}
               onValueChange={filterProductsByCategory}
             >
-              <SelectTrigger className="w-full sm:w-48 bg-transparent border-0 text-white focus:ring-0 focus:ring-offset-0">
-                <SelectValue placeholder="Filter by category" className="text-white" />
+              <SelectTrigger className="w-full sm:w-48 bg-white/10 border-0 text-white hover:bg-white/20 focus:ring-0 focus:ring-offset-0">
+                <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Select a category</SelectItem>
                 <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="none">No Filter</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
@@ -255,6 +305,19 @@ export default function StockOverviewPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+              onClick={handleExportCategoryPDF}
+              disabled={selectedCategory === 'none' || selectedCategory === 'all'}
+              title={selectedCategory === 'none' || selectedCategory === 'all' 
+                ? 'Select a category to export' 
+                : `Export ${categories.find(c => c.id === selectedCategory)?.name} to PDF`}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
           </div>
         </div>
       </div>
@@ -314,7 +377,7 @@ export default function StockOverviewPage() {
                   <div key={product.id} className="p-4 flex flex-col gap-2">
                     <div className="text-base font-medium">{product.name}</div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>SKU: {product.sku}</span>
+                      {selectedCategory === 'none' && <span>SKU: {product.sku}</span>}
                       <span>Stock: {product.current_stock}</span>
                     </div>
                     <div>
@@ -343,7 +406,7 @@ export default function StockOverviewPage() {
                 <TableHeader>
                   <TableRow className="hover:bg-blue-50 transition-colors duration-150">
                     <TableHead className="whitespace-nowrap">Product</TableHead>
-                    <TableHead className="whitespace-nowrap">SKU</TableHead>
+                    {selectedCategory === 'none' && <TableHead className="whitespace-nowrap">SKU</TableHead>}
                     <TableHead className="whitespace-nowrap">Stock</TableHead>
                     <TableHead className="whitespace-nowrap">Status</TableHead>
                   </TableRow>
@@ -354,7 +417,7 @@ export default function StockOverviewPage() {
                     return (
                       <TableRow key={product.id}>
                         <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell className="whitespace-nowrap">{product.sku}</TableCell>
+                        {selectedCategory === 'none' && <TableCell className="whitespace-nowrap">{product.sku}</TableCell>}
                         <TableCell className="whitespace-nowrap">{product.current_stock}</TableCell>
                         <TableCell>
                           <Badge 

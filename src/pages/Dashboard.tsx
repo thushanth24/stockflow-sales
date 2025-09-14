@@ -4,16 +4,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FloatingActionButton } from '@/components/ui/FloatingActionButton';
-import { Package, ShoppingCart, AlertTriangle, TrendingUp, Plus, ClipboardList, FileText, BarChart3 } from 'lucide-react';
+import { Package, ShoppingCart, AlertTriangle, TrendingUp, Plus, ClipboardList, FileText, BarChart3, RefreshCw, PackageSearch, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { downloadPDF } from '@/lib/categoryPdfUtils';
+import { generateSalesReportPDF } from '@/lib/pdfUtils';
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 interface DashboardStats {
-  totalProducts: number;
   recentPurchases: number;
-  totalSales: number;
+  recentSales: number;
   recentDamages: number;
+  recentReturns: number;
 }
 
 interface DailySalesData {
@@ -25,28 +30,170 @@ export default function Dashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
-    totalProducts: 0,
     recentPurchases: 0,
-    totalSales: 0,
+    recentSales: 0,
     recentDamages: 0,
+    recentReturns: 0,
   });
   const [dailySales, setDailySales] = useState<DailySalesData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState({
+    from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    to: new Date().toISOString().split('T')[0],
+  });
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchDashboardStats();
   }, []);
 
+  const handleDateRangeChange = () => {
+    fetchDashboardStats();
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      setIsGeneratingPDF(true);
+      
+      // Fetch sales data
+      const { data: salesData, error: salesError } = await supabase
+        .from('sales')
+        .select(`
+          id,
+          quantity,
+          revenue,
+          sale_date,
+          products (
+            name,
+            sku,
+            price,
+            categories (
+              name
+            )
+          )
+        `)
+        .gte('sale_date', dateRange.from)
+        .lte('sale_date', dateRange.to)
+        .order('sale_date', { ascending: false });
+
+      if (salesError) throw salesError;
+
+      // Fetch damage data
+      const { data: damageData, error: damageError } = await supabase
+        .from('damages')
+        .select(`
+          id,
+          quantity,
+          reason,
+          damage_date,
+          products (
+            name,
+            sku,
+            price,
+            categories (
+              name
+            )
+          )
+        `)
+        .gte('damage_date', dateRange.from)
+        .lte('damage_date', dateRange.to)
+        .order('damage_date', { ascending: false });
+
+      if (damageError) throw damageError;
+
+      // Fetch returns data
+      const { data: returnsData, error: returnsError } = await supabase
+        .from('returns')
+        .select(`
+          id,
+          quantity,
+          reason,
+          return_date,
+          products (
+            name,
+            sku,
+            price,
+            categories (
+              name
+            )
+          )
+        `)
+        .gte('return_date', dateRange.from)
+        .lte('return_date', dateRange.to)
+        .order('return_date', { ascending: false });
+
+      if (returnsError) throw returnsError;
+
+      // Format sales data
+      const formattedSales = (salesData || []).map(sale => ({
+        id: sale.id,
+        quantity: sale.quantity,
+        revenue: sale.revenue,
+        sale_date: sale.sale_date,
+        category_name: sale.products?.categories?.name || 'Uncategorized',
+        product_name: sale.products?.name || 'Unknown Product',
+        unit_price: sale.products?.price || 0,
+      }));
+
+      // Format damage data
+      const formattedDamages = (damageData || []).map(damage => ({
+        id: damage.id,
+        quantity: damage.quantity,
+        reason: damage.reason || '',
+        damage_date: damage.damage_date,
+        category_name: damage.products?.categories?.name || 'Uncategorized',
+        product_name: damage.products?.name || 'Unknown Product',
+        unit_price: damage.products?.price || 0,
+      }));
+
+      // Format returns data
+      const formattedReturns = (returnsData || []).map(returnItem => ({
+        id: returnItem.id,
+        quantity: returnItem.quantity,
+        reason: returnItem.reason || '',
+        return_date: returnItem.return_date,
+        category_name: returnItem.products?.categories?.name || 'Uncategorized',
+        product_name: returnItem.products?.name || 'Unknown Product',
+        unit_price: returnItem.products?.price || 0,
+      }));
+
+      const reportDate = dateRange.from === dateRange.to 
+        ? dateRange.from 
+        : `${dateRange.from} to ${dateRange.to}`;
+      
+      const doc = await generateSalesReportPDF(
+        formattedSales,
+        formattedDamages,
+        reportDate,
+        formattedReturns
+      );
+      
+      const filename = `Regal-Sales-Report-${new Date().toISOString().split('T')[0]}.pdf`;
+      downloadPDF(doc, filename);
+      
+      toast({
+        title: 'Success',
+        description: 'PDF report generated successfully',
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF report',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   const fetchDashboardStats = async () => {
     try {
+      setLoading(true);
       const now = new Date();
-      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const weekAgo = new Date(dateRange.from);
       const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-      // Fetch total products
-      const { count: productsCount } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true });
 
       // Fetch recent purchases (last 7 days)
       const { data: recentPurchasesData } = await supabase
@@ -54,17 +201,17 @@ export default function Dashboard() {
         .select('quantity')
         .gte('purchase_date', weekAgo.toISOString().split('T')[0]);
 
-      // Fetch total sales (last 30 days) - only for admin/super_admin
-      let totalSales = 0;
+      // Fetch recent sales count (last 7 days)
+      let recentSales = 0;
       let dailySalesData: DailySalesData[] = [];
       
       if (profile?.role === 'admin' || profile?.role === 'super_admin') {
-        const { data: salesData } = await supabase
+        const { data: salesData, count: salesCount } = await supabase
           .from('sales')
-          .select('revenue, sale_date')
+          .select('sale_date', { count: 'exact' })
           .gte('sale_date', weekAgo.toISOString().split('T')[0]);
         
-        totalSales = salesData?.reduce((sum, sale) => sum + Number(sale.revenue), 0) || 0;
+        recentSales = salesCount || 0;
         
         // Generate daily sales data for the last 7 days
         dailySalesData = generateDailySalesData(salesData || []);
@@ -76,11 +223,17 @@ export default function Dashboard() {
         .select('quantity')
         .gte('damage_date', weekAgo.toISOString().split('T')[0]);
 
+      // Fetch recent returns (last 7 days)
+      const { data: recentReturnsData } = await supabase
+        .from('returns')
+        .select('quantity')
+        .gte('return_date', weekAgo.toISOString().split('T')[0]);
+
       setStats({
-        totalProducts: productsCount || 0,
         recentPurchases: recentPurchasesData?.reduce((sum, purchase) => sum + purchase.quantity, 0) || 0,
-        totalSales,
+        recentSales,
         recentDamages: recentDamagesData?.reduce((sum, damage) => sum + damage.quantity, 0) || 0,
+        recentReturns: recentReturnsData?.reduce((sum, returnItem) => sum + returnItem.quantity, 0) || 0,
       });
       setDailySales(dailySalesData);
     } catch (error) {
@@ -122,22 +275,6 @@ export default function Dashboard() {
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="space-y-6 relative">
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200 hover:shadow-lg transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
-              <CardTitle className="text-sm font-medium text-blue-800">Total Products</CardTitle>
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Package className="h-4 w-4 text-blue-600" />
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
-              <div className="text-xl sm:text-2xl font-bold text-blue-900">
-                {loading ? '--' : stats.totalProducts}
-              </div>
-              <p className="text-xs text-blue-600">
-                Products in inventory
-              </p>
-            </CardContent>
-          </Card>
 
           <Card className="h-full bg-gradient-to-br from-green-50 to-emerald-100 border-green-200 hover:shadow-lg transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
@@ -160,17 +297,17 @@ export default function Dashboard() {
             <>
               <Card className="h-full bg-gradient-to-br from-purple-50 to-violet-100 border-purple-200 hover:shadow-lg transition-all duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
-                  <CardTitle className="text-sm font-medium text-purple-800">Total Sales</CardTitle>
+                  <CardTitle className="text-sm font-medium text-purple-800">Recent Sales</CardTitle>
                   <div className="p-2 rounded-lg bg-purple-500/10">
                     <TrendingUp className="h-4 w-4 text-purple-600" />
                   </div>
                 </CardHeader>
                 <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
                   <div className="text-xl sm:text-2xl font-bold text-purple-900">
-                    {loading ? 'Rs--' : `Rs ${stats.totalSales.toFixed(2)}`}
+                    {loading ? '--' : stats.recentSales}
                   </div>
                   <p className="text-xs text-purple-600">
-                    This month
+                    This week
                   </p>
                 </CardContent>
               </Card>
@@ -191,9 +328,69 @@ export default function Dashboard() {
                   </p>
                 </CardContent>
               </Card>
+
+              <Card className="h-full bg-gradient-to-br from-rose-50 to-pink-100 border-rose-200 hover:shadow-lg transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
+                  <CardTitle className="text-sm font-medium text-rose-800">Returns This Week</CardTitle>
+                  <div className="p-2 rounded-lg bg-rose-500/10">
+                    <RefreshCw className="h-4 w-4 text-rose-600" />
+                  </div>
+                </CardHeader>
+                <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
+                  <div className="text-xl sm:text-2xl font-bold text-rose-900">
+                    {loading ? '--' : stats.recentReturns}
+                  </div>
+                  <p className="text-xs text-rose-600">
+                    This week
+                  </p>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>
+
+        {/* Date Range and Export Section */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-end">
+              <div className="space-y-2 w-full sm:w-48">
+                <Label htmlFor="from-date" className="text-sm font-medium">From Date</Label>
+                <Input
+                  id="from-date"
+                  type="date"
+                  value={dateRange.from}
+                  onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                  className="w-full"
+                />
+              </div>
+              <div className="space-y-2 w-full sm:w-48">
+                <Label htmlFor="to-date" className="text-sm font-medium">To Date</Label>
+                <Input
+                  id="to-date"
+                  type="date"
+                  value={dateRange.to}
+                  onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                  className="w-full"
+                />
+              </div>
+              <Button 
+                onClick={handleDateRangeChange}
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Apply Filter
+              </Button>
+              <Button 
+                onClick={handleExportPDF}
+                disabled={isGeneratingPDF}
+                variant="outline"
+                className="w-full sm:w-auto flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                {isGeneratingPDF ? 'Generating...' : 'Export PDF'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="bg-gradient-to-br from-slate-50 to-gray-100 border-slate-200 hover:shadow-lg transition-all duration-300">
@@ -209,20 +406,20 @@ export default function Dashboard() {
                 {(profile?.role === 'staff' || profile?.role === 'admin' || profile?.role === 'super_admin') && (
                   <>
                     <Button 
-                      onClick={() => navigate('/dashboard/purchases')}
-                      className="w-full justify-start gap-3 h-12 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300"
+                      onClick={() => navigate('/dashboard/stock-overview')}
+                      className="w-full justify-start gap-3 h-12 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300"
                       variant="outline"
                     >
-                      <Plus className="h-4 w-4" />
-                      Add Purchase
+                      <PackageSearch className="h-4 w-4" />
+                      Stock
                     </Button>
                     <Button 
-                      onClick={() => navigate('/dashboard/stock-update')}
-                      className="w-full justify-start gap-3 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300"
+                      onClick={() => navigate('/dashboard/returns')}
+                      className="w-full justify-start gap-3 h-12 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300"
                       variant="outline"
                     >
-                      <ClipboardList className="h-4 w-4" />
-                      Stock Update
+                      <RefreshCw className="h-4 w-4" />
+                      Returns
                     </Button>
                     <Button 
                       onClick={() => navigate('/dashboard/damages')}
@@ -230,7 +427,7 @@ export default function Dashboard() {
                       variant="outline"
                     >
                       <AlertTriangle className="h-4 w-4" />
-                      Report Damage
+                      Damage
                     </Button>
                   </>
                 )}
