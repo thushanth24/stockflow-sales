@@ -124,6 +124,17 @@ export default function Dashboard() {
         .order('return_date', { ascending: false });
 
       if (returnsError) throw returnsError;
+      
+      // Fetch bottle data (only added bottles, not cleared ones)
+      const { data: bottlesData, error: bottlesError } = await supabase
+        .from('bottles')
+        .select('*')
+        .eq('operation_type', 'add')
+        .gte('date', dateRange.from)
+        .lte('date', dateRange.to)
+        .order('date', { ascending: false });
+        
+      if (bottlesError) throw bottlesError;
 
       // Format sales data
       const formattedSales = (salesData || []).map(sale => ({
@@ -161,6 +172,23 @@ export default function Dashboard() {
           revenue: returnItem.quantity * unitPrice, // Calculate the total value of the return
         };
       });
+      
+      // Format bottle data
+      const formattedBottles = (bottlesData || []).map(bottle => ({
+        id: bottle.id,
+        type: bottle.type,
+        unit: bottle.unit,
+        quantity: bottle.quantity,
+        price: bottle.price,
+        date: bottle.date,
+        operation_type: bottle.operation_type,
+        display_date: new Date(bottle.date).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        }),
+        total_value: bottle.quantity * bottle.price
+      }));
 
       const reportDate = dateRange.from === dateRange.to 
         ? dateRange.from 
@@ -170,7 +198,8 @@ export default function Dashboard() {
         formattedSales,
         formattedDamages,
         reportDate,
-        formattedReturns
+        formattedReturns,
+        formattedBottles
       );
       
       const filename = `Regal-Sales-Report-${new Date().toISOString().split('T')[0]}.pdf`;

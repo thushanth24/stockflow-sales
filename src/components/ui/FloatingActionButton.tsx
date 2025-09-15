@@ -6,7 +6,8 @@ import {
   Tag, 
   BarChart3, 
   AlertTriangle,
-  X
+  X,
+  Package as BottleIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +30,14 @@ const actionItems = [
     icon: Tag,
     href: '/dashboard/categories',
     color: 'bg-green-500 hover:bg-green-600',
+    iconColor: 'text-white'
+  },
+  {
+    id: 'bottles',
+    label: 'Bottles',
+    icon: BottleIcon,
+    href: '/dashboard/bottles',
+    color: 'bg-amber-500 hover:bg-amber-600',
     iconColor: 'text-white'
   },
   {

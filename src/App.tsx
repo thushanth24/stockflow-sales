@@ -22,6 +22,7 @@ import DamageReportsPage from "@/pages/admin/DamageReportsPage";
 import CategoriesPage from "@/pages/admin/CategoriesPage";
 import UserManagementPage from "@/pages/admin/UserManagementPage";
 import AuditLogsPage from "@/pages/admin/AuditLogsPage";
+import BottlesPage from "@/pages/BottlesPage";
 import Index from "@/pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -98,6 +99,10 @@ const App = () => {
     {
       path: "/dashboard/audit-logs",
       element: <ProtectedRoute allowedRoles={['super_admin']}><DashboardLayoutWrapper><AuditLogsPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/bottles",
+      element: <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}><DashboardLayoutWrapper><BottlesPage /></DashboardLayoutWrapper></ProtectedRoute>,
     },
     {
       path: "*",

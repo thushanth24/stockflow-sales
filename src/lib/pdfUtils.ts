@@ -3,18 +3,28 @@ import html2canvas from 'html2canvas';
 
 // Interface for sales and inventory items
 export interface FormattedItem {
-  id: string;
+  // Common fields
+  id: string | number;
   quantity: number;
   reason?: string;
+  display_date?: string;
+  
+  // Sales/Damage/Returns fields
   return_date?: string;
   damage_date?: string;
   sale_date?: string;
-  category_name: string;
-  product_name: string;
-  unit_price: number;
+  category_name?: string;
+  product_name?: string;
+  unit_price?: number;
   revenue?: number;
-  // Add a computed date field for display purposes
-  display_date?: string;
+  
+  // Bottle fields
+  type?: string;
+  unit?: string;
+  price?: number;
+  date?: string;
+  operation_type?: string;
+  total_value?: number;
 }
 
 const addTableSection = (doc: jsPDF, title: string, data: FormattedItem[], columns: {name: string, width: number, align?: string, key: keyof FormattedItem}[], yPos: number, pageWidth: number, margin: number) => {
@@ -157,7 +167,13 @@ const addTableSection = (doc: jsPDF, title: string, data: FormattedItem[], colum
   return { yPos: currentY, totalAmount };
 };
 
-export const generateSalesReportPDF = async (salesData: FormattedItem[], damageData: FormattedItem[], date: string, returnsData: FormattedItem[] = []) => {
+export const generateSalesReportPDF = async (
+  salesData: FormattedItem[], 
+  damageData: FormattedItem[], 
+  date: string, 
+  returnsData: FormattedItem[] = [],
+  bottlesData: FormattedItem[] = []
+) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 15;
@@ -214,6 +230,16 @@ export const generateSalesReportPDF = async (salesData: FormattedItem[], damageD
     { name: 'QTY', width: 20, align: 'right' as const, key: 'quantity' as keyof FormattedItem },
     { name: 'PRICE', width: 30, align: 'right' as const, key: 'unit_price' as keyof FormattedItem },
     { name: 'TOTAL', width: 35, align: 'right' as const, key: 'revenue' as keyof FormattedItem }
+  ];
+  
+  // Bottles column definitions
+  const bottlesColumns = [
+    { name: 'TYPE', width: 50, key: 'type' as keyof FormattedItem },
+    { name: 'UNIT', width: 30, key: 'unit' as keyof FormattedItem },
+    { name: 'QTY', width: 25, align: 'right' as const, key: 'quantity' as keyof FormattedItem },
+    { name: 'PRICE', width: 30, align: 'right' as const, key: 'price' as keyof FormattedItem },
+    { name: 'DATE', width: 40, align: 'right' as const, key: 'display_date' as keyof FormattedItem },
+    { name: 'TOTAL', width: 35, align: 'right' as const, key: 'total_value' as keyof FormattedItem }
   ];
   
   // Sales Section
@@ -313,114 +339,112 @@ export const generateSalesReportPDF = async (salesData: FormattedItem[], damageD
   );
   yPos = newYPos;
   
+  // Bottles Section
+  if (bottlesData.length > 0) {
+    // Add page break if needed
+    if (yPos > doc.internal.pageSize.getHeight() - 150) {
+      doc.addPage();
+      yPos = 20;
+    } else {
+      // Add extra space between sections
+      yPos += 25;
+    }
+    
+    const { yPos: newYPos, totalAmount: totalBottles } = addTableSection(
+      doc,
+      'BOTTLE REPORTS (ADDED)',
+      bottlesData,
+      bottlesColumns,
+      yPos,
+      pageWidth,
+      margin
+    );
+    yPos = newYPos;
+  }
+  
   // Calculate required height for summary section
   const summaryHeaderHeight = 15; // Space for "SUMMARY" header
-  const summaryContentHeight = 50; // Approximate height for summary content (including spacing)
-  const requiredSpace = summaryHeaderHeight + summaryContentHeight;
+  const summaryContentHeight = bottlesData.length > 0 ? 80 : 60; // Height based on content
+  const totalSummaryHeight = summaryHeaderHeight + summaryContentHeight;
   
-  // Check if we need a new page
-  if (yPos + requiredSpace > doc.internal.pageSize.getHeight() - 30) {
+  // Check if we need a new page for the summary
+  if (yPos + totalSummaryHeight > doc.internal.pageSize.getHeight() - margin) {
     doc.addPage();
-    yPos = 20; // Reset yPos for new page
+    yPos = 20;
   } else {
-    // Add some space before summary if there's room
-    yPos += 15;
+    // Add some space before the summary if we're not at the top of the page
+    yPos += 20;
   }
   
   // Calculate totals (use 0 if no data)
-  const totalSales = salesData.length > 0 ? salesData.reduce((sum, item) => sum + (item.revenue || 0), 0) : 0;
-  const totalReturns = returnsData.length > 0 ? returnsData.reduce((sum, item) => sum + (item.revenue || 0), 0) : 0;
-  const netTotal = totalSales - Math.abs(totalReturns);
+  const totalSales = salesData.reduce((sum, item) => sum + (item.revenue || 0), 0);
+  const totalDamages = damageData.reduce((sum, item) => sum + ((item.unit_price || 0) * item.quantity), 0);
+  const totalReturns = returnsData.reduce((sum, item) => sum + (item.revenue || 0), 0);
+  const totalBottles = bottlesData.reduce((sum, item) => sum + (item.total_value || 0), 0);
   
-  // Summary header
-  doc.setFontSize(14);
+  // Summary Section
+  const summaryY = doc.internal.pageSize.getHeight() - summaryContentHeight;
+  yPos = summaryY;
+  
+  // Add summary section background
+  doc.setFillColor(249, 250, 251); // Gray-50
+  doc.rect(margin, summaryY - 10, pageWidth - (margin * 2), summaryContentHeight, 'F');
+  doc.roundedRect(margin, summaryY - 10, pageWidth - (margin * 2), summaryContentHeight, 3, 3, 'S');
+  
+  // Summary title
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(59, 130, 246); // Blue-600
-  doc.text('SUMMARY', margin, yPos);
-  yPos += 15;
+  doc.setTextColor(31, 41, 55); // Gray-800
+  doc.text('SUMMARY', margin + 10, summaryY + 5);
   
   // If no data at all, show a message
-  if (salesData.length === 0 && returnsData.length === 0) {
-    // Check if we need a new page for the message
-    if (yPos > doc.internal.pageSize.getHeight() - 20) {
-      doc.addPage();
-      yPos = 20;
-    }
-    
+  if (salesData.length === 0 && damageData.length === 0 && returnsData.length === 0 && bottlesData.length === 0) {
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139); // Slate-500
-    doc.text('No transaction data available for the selected period', margin, yPos);
-    yPos += 10;
-  } else {
-    // Summary table - always show all rows
-    const summaryData = [
-      { label: 'Total Sales', value: totalSales },
-      { label: 'Total Returns', value: -Math.abs(totalReturns) },
-      { label: 'Net Total', value: netTotal }
-    ];
-    
-    // Draw summary table
-    const summaryWidth = pageWidth - (margin * 2);
-    const col1Width = 100;
-    const col2Width = summaryWidth - col1Width;
-    
-    // Table header
-    doc.setFillColor(248, 250, 252); // Cool gray-50
-    doc.roundedRect(margin, yPos, summaryWidth, 10, 2, 2, 'F');
-    doc.setLineWidth(0.2);
-    doc.setDrawColor(209, 213, 219); // Gray-300
-    doc.roundedRect(margin, yPos, summaryWidth, 10, 2, 2, 'S');
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Description', margin + 5, yPos + 7);
-    doc.text('Amount (Rs)', margin + summaryWidth - 5, yPos + 7, { align: 'right' });
-    yPos += 12;
-    
-    // Table rows
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    
-    summaryData.forEach((row, index) => {
-      // Row background
-      const rowBg = index % 2 === 0 ? [255, 255, 255] : [248, 250, 252];
-      doc.setFillColor(rowBg[0], rowBg[1], rowBg[2]);
-      doc.roundedRect(margin, yPos - 1, summaryWidth, 10, 1, 1, 'F');
-      
-      // Row border
-      doc.setDrawColor(226, 232, 240); // Gray-200
-      doc.roundedRect(margin, yPos - 1, summaryWidth, 10, 1, 1, 'S');
-      
-      // Draw row content
-      doc.setTextColor(15, 23, 42); // Slate-900
-      doc.text(row.label, margin + 5, yPos + 6);
-      
-      // Format value with 2 decimal places and color based on value
-      const value = row.value;
-      const isNetTotal = row.label === 'Net Total';
-      const formattedValue = `Rs ${Math.abs(value).toFixed(2)}`;
-      
-      if (value < 0) {
-        doc.setTextColor(220, 38, 38); // Red-600 for negative values
-      } else if (isNetTotal) {
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(22, 163, 74); // Green-600 for net total
-      } else {
-        doc.setTextColor(15, 23, 42); // Slate-900 for positive values
-      }
-      
-      doc.text(formattedValue, margin + summaryWidth - 5, yPos + 6, { align: 'right' });
-      
-      // Reset text color and font
-      doc.setTextColor(15, 23, 42);
-      doc.setFont('helvetica', 'normal');
-      
-      yPos += 10;
-    });
-    
-    yPos += 10;
+    doc.setTextColor(100, 100, 100);
+    doc.text('No data available for the selected period.', margin + 10, summaryY + 25);
+    return doc;
   }
+  
+  // Summary values
+  doc.setFont('helvetica', 'normal');
+  let currentY = summaryY + 20;
+  
+  // Total Sales
+  doc.text('Total Sales:', margin + 20, currentY);
+  doc.text(`Rs ${totalSales.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
+  
+  // Returns (if any)
+  if (totalReturns > 0) {
+    currentY += 10;
+    doc.text('Total Returns:', margin + 20, currentY);
+    doc.text(`- Rs ${totalReturns.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
+  }
+  
+  // Bottles (if any)
+  if (totalBottles > 0) {
+    currentY += 10;
+    doc.text('Bottles Added:', margin + 20, currentY);
+    doc.text(`- Rs ${totalBottles.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
+  }
+  
+  // Damages (if any)
+  if (damageData.length > 0) {
+    currentY += 10;
+    doc.text('Damages:', margin + 20, currentY);
+    doc.text(`- Rs ${totalDamages.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
+  }
+  
+  // Net Total
+  currentY += 15;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Net Total:', margin + 20, currentY);
+  const netTotal = totalSales - totalReturns - totalBottles;
+  doc.text(`Rs ${netTotal.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
+  
+  // Add a line above the summary
+  doc.setDrawColor(209, 213, 219); // Gray-300
+  doc.setLineWidth(0.5);
+  doc.line(margin, summaryY - 15, pageWidth - margin, summaryY - 15);
   
   // Add footer with timestamp
   doc.setFont('helvetica', 'italic');
