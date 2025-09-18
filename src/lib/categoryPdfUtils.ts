@@ -1,10 +1,11 @@
 import { jsPDF } from 'jspdf';
+import * as XLSX from 'xlsx';
 
 // Interface for product data used in category stock reports
 export interface ProductWithStock {
   id: string;
   name: string;
-  sku: string;
+  sku?: string;  // Made optional since we're not using it in exports
   price: number;
   current_stock: number;
   category_name?: string;
@@ -151,4 +152,224 @@ export const generateCategoryStockPDF = (categoryName: string, products: Product
  */
 export const downloadPDF = (doc: jsPDF, filename: string) => {
   doc.save(`${filename}_${new Date().toISOString().split('T')[0]}.pdf`);
+};
+
+/**
+ * Exports category stock data to Excel format
+ * @param categoryName - Name of the category
+ * @param products - Array of products in the category
+ * @param filename - Base name for the file
+ */
+export const exportToExcel = (categoryName: string, products: ProductWithStock[], filename: string) => {
+  try {
+    const wb = XLSX.utils.book_new();
+    const isAllCategories = categoryName === 'All Categories';
+    
+    if (isAllCategories) {
+      // Group products by category
+      const categories = new Map<string, ProductWithStock[]>();
+      
+      products.forEach(product => {
+        const category = product.category_name || 'Uncategorized';
+        if (!categories.has(category)) {
+          categories.set(category, []);
+        }
+        categories.get(category)?.push(product);
+      });
+      
+      // Sort categories alphabetically
+      const sortedCategories = Array.from(categories.entries())
+        .sort(([catA], [catB]) => catA.localeCompare(catB));
+      
+      let rowOffset = 0;
+      let allProductsData: (string | number)[][] = [
+        ['Stock Report - All Categories'],
+        ['Generated on', new Date().toLocaleString()],
+        [] // Empty row for spacing
+      ];
+      
+      // Add each category's products
+      for (const [category, categoryProducts] of sortedCategories) {
+        // Add category header
+        allProductsData.push([`Category: ${category}`]);
+        allProductsData.push(['Product Name', 'Stock', 'Price', 'Total Value']);
+        
+        // Add products for this category
+        categoryProducts.forEach(product => {
+          allProductsData.push([
+            product.name,
+            product.current_stock,
+            product.price,
+            product.current_stock * product.price
+          ]);
+        });
+        
+        // Add subtotal for the category
+        const categoryStock = categoryProducts.reduce((sum, p) => sum + p.current_stock, 0);
+        const categoryValue = categoryProducts.reduce((sum, p) => sum + (p.current_stock * p.price), 0);
+        
+        allProductsData.push([
+          `Subtotal (${category})`,
+          categoryStock,
+          '',
+          categoryValue
+        ]);
+        
+        // Add empty row between categories
+        allProductsData.push([], []);
+      }
+      
+      // Add grand totals
+      const totalProducts = products.length;
+      const totalStock = products.reduce((sum, p) => sum + p.current_stock, 0);
+      const totalValue = products.reduce((sum, p) => sum + (p.current_stock * p.price), 0);
+      
+      allProductsData.push(
+        ['GRAND TOTAL', '', '', ''],
+        ['Total Products', totalProducts],
+        ['Total Stock', totalStock],
+        ['Total Value', '', '', totalValue]
+      );
+      
+      // Create worksheet
+      const ws = XLSX.utils.aoa_to_sheet(allProductsData);
+      
+      // Set column widths
+      const colWidths = [
+        { wch: 40 }, // Product Name
+        { wch: 12 }, // Stock
+        { wch: 15 }, // Price
+        { wch: 15 }  // Total Value
+      ];
+      ws['!cols'] = colWidths;
+      
+      // Apply styling
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+      for (let R = 0; R <= range.e.r; R++) {
+        const isHeader = R <= 3; // First 4 rows are headers
+        const isCategoryHeader = allProductsData[R]?.[0]?.toString().startsWith('Category:');
+        const isSubtotal = allProductsData[R]?.[0]?.toString().startsWith('Subtotal');
+        const isGrandTotal = allProductsData[R]?.[0] === 'GRAND TOTAL';
+        const isTotalRow = allProductsData[R]?.[0]?.toString().startsWith('Total ');
+        
+        // Format all cells in the row
+        for (let C = 0; C <= range.e.c; C++) {
+          const cell = XLSX.utils.encode_cell({r: R, c: C});
+          if (!ws[cell]) ws[cell] = {};
+          
+          // Apply bold to headers and important rows
+          if (isHeader || isCategoryHeader || isSubtotal || isGrandTotal || isTotalRow) {
+            ws[cell].s = { font: { bold: true } };
+          }
+          
+          // Format numbers
+          if (C >= 1 && R >= 3) { // Skip headers
+            if (C === 2 || C === 3) { // Price and Total Value columns
+              ws[cell].t = 'n';
+              ws[cell].z = '#,##0.00';
+            } else if (C === 1) { // Stock column
+              ws[cell].t = 'n';
+            }
+          }
+        }
+      }
+      
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Stock Report');
+      
+    } else {
+      // Single category export (original logic)
+      const worksheetData: (string | number)[][] = [
+        [`Stock Report - ${categoryName}`],
+        ['Generated on', new Date().toLocaleString()],
+        [], // Empty row for spacing
+        ['Product Name', 'Stock', 'Price', 'Total Value']
+      ];
+
+      // Add product rows
+      products.forEach(product => {
+        worksheetData.push([
+          product.name,
+          product.current_stock,
+          product.price,
+          product.current_stock * product.price
+        ]);
+      });
+
+      // Calculate totals
+      const totalStock = products.reduce((sum, p) => sum + p.current_stock, 0);
+      const totalValue = products.reduce((sum, p) => sum + (p.current_stock * p.price), 0);
+      
+      // Add summary rows
+      worksheetData.push(
+        [], // Empty row for spacing
+        ['Total Products', products.length],
+        ['Total Stock', totalStock],
+        ['Total Value', '', '', totalValue]
+      );
+
+      // Create worksheet
+      const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+      
+      // Set column widths
+      const colWidths = [
+        { wch: 40 }, // Product Name
+        { wch: 12 }, // Stock
+        { wch: 15 }, // Price
+        { wch: 15 }  // Total Value
+      ];
+      ws['!cols'] = colWidths;
+      
+      // Apply number formatting
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+      for (let R = 4; R <= range.e.r; R++) { // Start from row 5 (0-based index 4) to skip headers
+        // Format stock column (column B, 0-based index 1)
+        const stockCell = XLSX.utils.encode_cell({r: R, c: 1});
+        if (!ws[stockCell]) ws[stockCell] = {};
+        ws[stockCell].t = 'n';
+        
+        // Format price column (column C, 0-based index 2)
+        const priceCell = XLSX.utils.encode_cell({r: R, c: 2});
+        if (ws[priceCell]) {
+          ws[priceCell].t = 'n';
+          ws[priceCell].z = '#,##0.00';
+        }
+        
+        // Format total value column (column D, 0-based index 3)
+        const totalCell = XLSX.utils.encode_cell({r: R, c: 3});
+        if (ws[totalCell]) {
+          ws[totalCell].t = 'n';
+          ws[totalCell].z = '#,##0.00';
+        }
+      }
+      
+      // Make totals bold
+      for (let R = range.e.r - 3; R <= range.e.r; R++) {
+        for (let C = 0; C <= range.e.c; C++) {
+          const cell = XLSX.utils.encode_cell({r: R, c: C});
+          if (!ws[cell]) ws[cell] = {};
+          if (!ws[cell].s) ws[cell].s = {};
+          ws[cell].s.font = { bold: true };
+        }
+      }
+      
+      XLSX.utils.book_append_sheet(wb, ws, categoryName.substring(0, 31)); // Sheet name max 31 chars
+    }
+    
+    // Generate Excel file and trigger download
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(data);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error exporting to Excel:', error);
+    throw error;
+  }
 };

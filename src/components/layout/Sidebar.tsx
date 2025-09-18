@@ -57,6 +57,8 @@ export function Sidebar() {
     { icon: Package, label: 'Categories', href: '/dashboard/categories' },
     { icon: ShoppingCart, label: 'Add Purchase', href: '/dashboard/purchases' },
     { icon: ClipboardList, label: 'Sales Entry', href: '/dashboard/stock-update' },
+    { icon: RefreshCw, label: 'Restore Sales', href: '/dashboard/restore-sales' },
+    { icon: Package, label: 'Bottles', href: '/dashboard/bottles' },
     { icon: AlertTriangle, label: 'Report Damage', href: '/dashboard/damages' },
     { icon: RefreshCw, label: 'Returns', href: '/dashboard/returns' },
   ];

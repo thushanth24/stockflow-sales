@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import '@/types/supabase_rpc'; // Import RPC type definitions
@@ -45,9 +45,10 @@ export default function SalesUpdatePage() {
   const [saleEntries, setSaleEntries] = useState<SaleEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -140,6 +141,20 @@ export default function SalesUpdatePage() {
     filterProducts(selectedCategory, value);
   };
 
+  const handleQuantityChange = (productId: string, value: string) => {
+    const quantity = parseInt(value) || 0;
+    setSaleEntries(prev => {
+      const existingEntry = prev.find(entry => entry.product_id === productId);
+      if (existingEntry) {
+        return prev.map(entry =>
+          entry.product_id === productId ? { ...entry, quantity_sold: quantity } : entry
+        );
+      }
+      return [...prev, { product_id: productId, quantity_sold: quantity, price: 0 }];
+    });
+    setHasUnsavedChanges(true);
+  };
+
   const updateSaleQuantity = (productId: string, quantity: number, price: number) => {
     setSaleEntries(prev => {
       const existingEntry = prev.find(entry => entry.product_id === productId);
@@ -153,14 +168,37 @@ export default function SalesUpdatePage() {
         return [...prev, { product_id: productId, quantity_sold: quantity, price }];
       }
     });
+    setHasUnsavedChanges(true);
   };
 
-  const handleSubmit = async () => {
+  // Handle beforeunload event
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     setSubmitting(true);
     
     try {
       if (!selectedDate) {
-        throw new Error('Please select a date for the sales entry.');
+        setSubmitting(false);
+        toast({
+          title: 'Date Required',
+          description: 'Please select a date before recording sales',
+          variant: 'destructive',
+        });
+        return;
       }
       
       // Filter out entries with 0 quantity
@@ -226,6 +264,7 @@ export default function SalesUpdatePage() {
       });
     } finally {
       setSubmitting(false);
+      setHasUnsavedChanges(false);
     }
   };
 
@@ -364,17 +403,23 @@ export default function SalesUpdatePage() {
               </div>
               {/* Date selection for stock update */}
               <div className="w-full sm:w-64">
-                <Label className="text-sm text-gray-700">Sales Date</Label>
+                <Label className="text-sm text-gray-700">Sales Date *</Label>
                 <Input
                   type="date"
                   value={selectedDate}
                   max={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="mt-1 w-full bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  className={`mt-1 w-full bg-white ${!selectedDate ? 'border-red-500' : 'border-gray-300'} focus:border-blue-500 focus:ring-blue-500`}
+                  required
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Select the date for these sales entries
                 </p>
+                {!selectedDate && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Please select a date before recording sales
+                  </p>
+                )}
               </div>
               </div>
             <div className="rounded-lg border border-gray-200 overflow-hidden">

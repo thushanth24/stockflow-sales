@@ -9,7 +9,7 @@ import { Package, AlertTriangle, TrendingDown, Filter, Download } from 'lucide-r
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/PaginationControls';
-import { generateCategoryStockPDF, downloadPDF } from '@/lib/categoryPdfUtils';
+import { generateCategoryStockPDF, downloadPDF, exportToExcel } from '@/lib/categoryPdfUtils';
 
 interface Category {
   id: string;
@@ -98,48 +98,116 @@ export default function StockOverviewPage() {
   };
 
   const handleExportCategoryPDF = async () => {
-    if (selectedCategory === 'none' || selectedCategory === 'all') {
+    if (selectedCategory === 'none') {
       toast({
-        title: 'Please select a specific category',
-        description: 'You need to select a specific category to export.',
+        title: 'Please select a category',
+        description: 'You need to select a category to export.',
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      const category = categories.find(cat => cat.id === selectedCategory);
-      if (!category) return;
+      let productsToExport: any[] = [];
+      let exportName = '';
 
-      // Get products for the selected category
-      const categoryProducts = products.filter(
-        product => product.category_id === selectedCategory
-      );
+      if (selectedCategory === 'all') {
+        // Export all categories
+        productsToExport = [...products];
+        exportName = 'All_Categories';
+      } else {
+        // Export specific category
+        const category = categories.find(cat => cat.id === selectedCategory);
+        if (!category) return;
+        
+        productsToExport = products.filter(
+          product => product.category_id === selectedCategory
+        );
+        exportName = category.name;
+      }
 
       // Generate and download PDF
       const doc = generateCategoryStockPDF(
-        category.name,
-        categoryProducts.map(p => ({
+        selectedCategory === 'all' ? 'All Categories' : exportName,
+        productsToExport.map(p => ({
           id: p.id,
           name: p.name,
-          sku: p.sku,
           price: p.price,
           current_stock: p.current_stock,
           category_name: p.categories?.name || 'Uncategorized'
         }))
       );
       
-      downloadPDF(doc, `stock_report_${category.name.toLowerCase().replace(/\s+/g, '_')}`);
+      downloadPDF(doc, `stock_report_${exportName.toLowerCase().replace(/\s+/g, '_')}`);
       
       toast({
         title: 'PDF Exported',
-        description: `Stock report for ${category.name} has been exported successfully.`,
+        description: `Stock report ${selectedCategory === 'all' ? 'for all categories' : `for ${exportName}`} has been exported successfully.`,
       });
     } catch (error) {
       console.error('Error exporting PDF:', error);
       toast({
         title: 'Error',
         description: 'Failed to export PDF. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExportCategoryExcel = async () => {
+    if (selectedCategory === 'none') {
+      toast({
+        title: 'Please select a category',
+        description: 'You need to select a category to export.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      let productsToExport: any[] = [];
+      let exportName = '';
+
+      if (selectedCategory === 'all') {
+        // Export all categories
+        productsToExport = [...products];
+        exportName = 'All_Categories';
+      } else {
+        // Export specific category
+        const category = categories.find(cat => cat.id === selectedCategory);
+        if (!category) return;
+        
+        productsToExport = products.filter(
+          product => product.category_id === selectedCategory
+        );
+        exportName = category.name;
+      }
+
+      // Prepare products data for export
+      const productsForExport = productsToExport.map(p => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        current_stock: p.current_stock,
+        category_name: p.categories?.name || 'Uncategorized'
+      }));
+
+      // Export to Excel
+      exportToExcel(
+        selectedCategory === 'all' ? 'All Categories' : exportName,
+        productsForExport,
+        `stock_report_${exportName.toLowerCase().replace(/\s+/g, '_')}`
+      );
+      
+      toast({
+        title: 'Excel Exported',
+        description: `Stock report ${selectedCategory === 'all' ? 'for all categories' : `for ${exportName}`} has been exported successfully.`,
+      });
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to export to Excel. Please try again.',
         variant: 'destructive',
       });
     }
@@ -305,19 +373,34 @@ export default function StockOverviewPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20"
-              onClick={handleExportCategoryPDF}
-              disabled={selectedCategory === 'none' || selectedCategory === 'all'}
-              title={selectedCategory === 'none' || selectedCategory === 'all' 
-                ? 'Select a category to export' 
-                : `Export ${categories.find(c => c.id === selectedCategory)?.name} to PDF`}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                onClick={handleExportCategoryPDF}
+                disabled={selectedCategory === 'none'}
+                title={selectedCategory === 'none' 
+                  ? 'Select a category to export' 
+                  : `Export ${selectedCategory === 'all' ? 'all categories' : categories.find(c => c.id === selectedCategory)?.name} to PDF`}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="bg-green-500/10 hover:bg-green-500/20 text-green-100 border-green-500/20"
+                onClick={handleExportCategoryExcel}
+                disabled={selectedCategory === 'none'}
+                title={selectedCategory === 'none'
+                  ? 'Select a category to export' 
+                  : `Export ${selectedCategory === 'all' ? 'all categories' : categories.find(c => c.id === selectedCategory)?.name} to Excel`}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Excel
+              </Button>
+            </div>
           </div>
         </div>
       </div>

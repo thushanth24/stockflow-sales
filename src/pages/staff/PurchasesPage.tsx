@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,12 +54,13 @@ export default function PurchasesPage() {
   const [purchaseEntries, setPurchaseEntries] = useState<{[key: string]: number}>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
+  const [purchaseDate, setPurchaseDate] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingPurchaseId, setEditingPurchaseId] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -92,7 +93,7 @@ export default function PurchasesPage() {
       const categoriesList = categoriesData || [];
       setCategories(categoriesList);
       
-      // Set the first category as default if available
+          // Set the first category as default if available
       if (categoriesList.length > 0) {
         setSelectedCategory(categoriesList[0].id);
       }
@@ -231,10 +232,18 @@ export default function PurchasesPage() {
   }, [selectedCategory, products, searchTerm]);
 
   const updatePurchaseQuantity = (productId: string, quantity: number) => {
-    setPurchaseEntries(prev => ({
-      ...prev,
-      [productId]: quantity
-    }));
+    setPurchaseEntries(prev => {
+      const newEntries = {
+        ...prev,
+        [productId]: quantity
+      };
+      
+      // Check if there are any non-zero quantities
+      const hasChanges = Object.values(newEntries).some(qty => qty > 0);
+      setHasUnsavedChanges(hasChanges);
+      
+      return newEntries;
+    });
   };
 
   const loadPurchaseForEditing = async (purchaseId: string) => {
@@ -292,11 +301,28 @@ export default function PurchasesPage() {
   };
 
   const resetForm = () => {
-    setPurchaseDate(new Date().toISOString().split('T')[0]);
+    setPurchaseDate('');
     setPurchaseEntries({});
     setIsEditMode(false);
     setEditingPurchaseId(null);
+    setHasUnsavedChanges(false);
   };
+
+  // Handle beforeunload event
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
 
   const handleSubmit = async () => {
     const validEntries = Object.entries(purchaseEntries)
@@ -310,6 +336,15 @@ export default function PurchasesPage() {
       toast({
         title: 'Error',
         description: 'Please add quantities for at least one product',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!purchaseDate) {
+      toast({
+        title: 'Error',
+        description: 'Please select a purchase date',
         variant: 'destructive',
       });
       return;

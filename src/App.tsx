@@ -16,6 +16,7 @@ import PurchasesPage from "@/pages/staff/PurchasesPage";
 import StockUpdatePage from "@/pages/staff/StockUpdatePage";
 import DamagesPage from "@/pages/staff/DamagesPage";
 import ReturnsPage from "@/pages/staff/ReturnsPage";
+import RestoreSalesPage from "@/pages/staff/RestoreSalesPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
 import StockOverviewPage from "@/pages/admin/StockOverviewPage";
 import DamageReportsPage from "@/pages/admin/DamageReportsPage";
@@ -103,6 +104,10 @@ const App = () => {
     {
       path: "/dashboard/bottles",
       element: <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}><DashboardLayoutWrapper><BottlesPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/restore-sales",
+      element: <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}><DashboardLayoutWrapper><RestoreSalesPage /></DashboardLayoutWrapper></ProtectedRoute>,
     },
     {
       path: "*",

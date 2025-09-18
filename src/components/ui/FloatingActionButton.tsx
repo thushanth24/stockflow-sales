@@ -7,7 +7,8 @@ import {
   BarChart3, 
   AlertTriangle,
   X,
-  Package as BottleIcon
+  Package as BottleIcon,
+  RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -54,6 +55,14 @@ const actionItems = [
     icon: AlertTriangle,
     href: '/dashboard/damages',
     color: 'bg-red-500 hover:bg-red-600',
+    iconColor: 'text-white'
+  },
+  {
+    id: 'restore-sales',
+    label: 'Restore Sales',
+    icon: RotateCcw,
+    href: '/dashboard/restore-sales',
+    color: 'bg-indigo-500 hover:bg-indigo-600',
     iconColor: 'text-white'
   },
 ];
