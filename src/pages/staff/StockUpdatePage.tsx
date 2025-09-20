@@ -43,6 +43,7 @@ export default function SalesUpdatePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [saleEntries, setSaleEntries] = useState<SaleEntry[]>([]);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -463,12 +464,18 @@ export default function SalesUpdatePage() {
                             type="number"
                             min="0"
                             max={product.current_stock}
-                            value={saleEntry.quantity_sold}
-                            onChange={(e) => updateSaleQuantity(
-                              product.id,
-                              Math.min(parseInt(e.target.value) || 0, product.current_stock),
-                              product.price
-                            )}
+                            value={focusedInput === product.id 
+                              ? saleEntries.find(e => e.product_id === product.id)?.quantity_sold === 0 
+                                ? '' 
+                                : saleEntries.find(e => e.product_id === product.id)?.quantity_sold || ''
+                              : saleEntry.quantity_sold || ''}
+                            onFocus={() => setFocusedInput(product.id)}
+                            onBlur={() => setFocusedInput(null)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              const quantity = value === '' ? 0 : Math.min(parseInt(value) || 0, product.current_stock);
+                              updateSaleQuantity(product.id, quantity, product.price);
+                            }}
                             className={`mt-1 w-full text-right border-gray-300 focus:ring-blue-500 focus:border-blue-500 py-2 px-3 h-10 ${
                               hasEntry ? 'border-blue-500 bg-blue-50' : ''
                             }`}
