@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronDown, Plus, Minus } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronDown, Plus, Minus, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -92,19 +94,28 @@ export default function BottlesPage() {
   const fetchBottles = async () => {
     try {
       setLoading(true);
+      
+      // Fetch all bottles
       const { data, error } = await supabase
         .from('bottles')
         .select('*')
         .order('date', { ascending: false });
-
+      
       if (error) throw error;
+      
       setBottles(data || []);
+      
+      if (!data || data.length === 0) {
+        setStockSummary([]);
+        return;
+      }
       
       // Calculate stock summary
       const summaryMap = new Map();
       
-      data?.forEach(bottle => {
-        const key = `${bottle.type}_${bottle.unit}_${bottle.price}`;
+      data.forEach(bottle => {
+        const key = `${bottle.type}_${bottle.unit}_${bottle.price}`.toLowerCase();
+        
         if (!summaryMap.has(key)) {
           summaryMap.set(key, {
             type: bottle.type,
@@ -114,19 +125,22 @@ export default function BottlesPage() {
             totalValue: 0
           });
         }
+        
         const summary = summaryMap.get(key);
-        summary.totalQuantity += bottle.quantity;
-        summary.totalValue += bottle.quantity * bottle.price;
+        const operation = bottle.operation_type || 'add';
+        const quantity = operation === 'add' ? bottle.quantity : -bottle.quantity;
+        
+        summary.totalQuantity += quantity;
+        summary.totalValue = summary.totalQuantity * bottle.price;
       });
       
-      // Convert map to array and sort by type
-      const summaryArray = Array.from(summaryMap.values()).sort((a, b) => 
-        a.type.localeCompare(b.type)
-      );
+      // Convert map to array, filter out zero quantities, and sort by type
+      const summaryArray = Array.from(summaryMap.values())
+        .filter(item => item.totalQuantity > 0) // Only show items with positive quantity
+        .sort((a, b) => a.type.localeCompare(b.type));
       
       setStockSummary(summaryArray);
     } catch (error) {
-      console.error('Error fetching bottles:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch bottles',
@@ -216,7 +230,10 @@ export default function BottlesPage() {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-6">Bottles Management</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
+        <h1 className="text-2xl font-bold">Bottles Management</h1>
+
+      </div>
       
       <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-8">
         <Tabs 
@@ -381,9 +398,26 @@ export default function BottlesPage() {
         </div>
         
         {loading ? (
-          <div className="text-center py-8">Loading stock data...</div>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p>Loading stock data...</p>
+          </div>
         ) : stockSummary.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No bottle stock data available</div>
+          <div className="text-center py-8 text-gray-500">
+            <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-lg font-medium">No bottle stock data available</p>
+            <p className="text-sm mt-2">Try adding some bottles using the form above.</p>
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg text-left max-w-md mx-auto">
+              <p className="text-sm font-medium mb-2">Debug Information:</p>
+              <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-40">
+                {JSON.stringify({
+                  bottlesCount: bottles.length,
+                  lastUpdated: new Date().toISOString(),
+                  hasData: bottles.length > 0
+                }, null, 2)}
+              </pre>
+            </div>
+          </div>
         ) : (
           <div className="overflow-x-auto -mx-2 sm:mx-0">
             <div className="inline-block min-w-full py-2 align-middle">

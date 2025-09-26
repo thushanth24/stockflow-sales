@@ -178,6 +178,16 @@ export default function ReportsPage() {
     unit_price: number;
   }
 
+  interface FormattedBottle {
+    id: number;
+    type: string;
+    unit: string;
+    quantity: number;
+    price: number;
+    display_date: string;
+    total_value: number;
+  }
+
   const handleExportPDF = async () => {
     try {
       setIsGeneratingPDF(true);
@@ -249,6 +259,27 @@ export default function ReportsPage() {
         unit_price: damage.products?.price || 0,
       }));
 
+      // Fetch bottle data for the same period
+      const { data: bottleData, error: bottleError } = await supabase
+        .from('bottles')
+        .select('*')
+        .gte('date', dateRange.from)
+        .lte('date', dateRange.to)
+        .order('date', { ascending: false });
+
+      if (bottleError) throw bottleError;
+
+      // Format bottle data for PDF
+      const formattedBottles: FormattedBottle[] = (bottleData || []).map(bottle => ({
+        id: bottle.id,
+        type: bottle.type || 'Unknown Type',
+        unit: bottle.unit || 'N/A',
+        quantity: bottle.quantity || 0,
+        price: bottle.price || 0,
+        display_date: new Date(bottle.date).toLocaleDateString(),
+        total_value: (bottle.quantity || 0) * (bottle.price || 0)
+      }));
+
       // Generate and download PDF
       const reportDate = dateRange.from === dateRange.to 
         ? dateRange.from 
@@ -257,7 +288,9 @@ export default function ReportsPage() {
       const doc = await generateSalesReportPDF(
         formattedSales,
         formattedDamages,
-        reportDate
+        reportDate,
+        [], // Empty array for returns (if not used)
+        formattedBottles
       );
       
       const filename = `Regal-Sales-Report-${new Date().toISOString().split('T')[0]}.pdf`;
