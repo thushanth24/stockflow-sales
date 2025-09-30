@@ -22,9 +22,9 @@ import {
   LogOut,
   LayoutDashboard,
   RefreshCw,
+  Wallet,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 import { Button } from '@/components/ui/button';
 
@@ -66,6 +66,7 @@ export function Sidebar() {
   const adminItems = [
     { icon: BarChart3, label: 'Reports', href: '/dashboard/reports' },
     { icon: Package, label: 'Stock Overview', href: '/dashboard/stock-overview' },
+    { icon: Wallet, label: 'Other Income', href: '/dashboard/other-income' },
     { icon: AlertTriangle, label: 'Damage Reports', href: '/dashboard/damage-reports' },
   ];
 
@@ -165,6 +166,13 @@ export function Sidebar() {
                       icon: 'text-indigo-600',
                       text: 'text-indigo-800'
                     };
+                  case 'Other Income':
+                    return {
+                      active: 'from-amber-500 to-orange-600',
+                      hover: 'from-amber-400 to-orange-500',
+                      icon: 'text-amber-600',
+                      text: 'text-amber-800'
+                    };
                   case 'Damage Reports':
                     return {
                       active: 'from-red-500 to-pink-600',
@@ -228,22 +236,7 @@ export function Sidebar() {
       
       {/* User Profile Section */}
       {profile && (
-        <SidebarFooter className="p-4 bg-gradient-to-br from-white/90 via-blue-50/90 to-indigo-100/90 border-t border-blue-200/50 space-y-3 backdrop-blur-sm">
-          <div className="flex items-center gap-3 px-3 py-3 bg-gradient-to-r from-white/90 to-blue-50/90 rounded-xl shadow-md border border-blue-200/30">
-            <Avatar className="h-10 w-10 border-2 border-white shadow-lg">
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 text-white font-semibold">
-                {profile?.full_name?.charAt(0) || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate">
-                {profile?.full_name || 'User'}
-              </p>
-              <span className={`text-xs px-2 py-1 rounded-full font-medium shadow-sm ${getRoleColor(profile.role)}`}>
-                {formatRole(profile.role)}
-              </span>
-            </div>
-          </div>
+        <SidebarFooter className="p-4 bg-gradient-to-br from-white/90 via-blue-50/90 to-indigo-100/90 border-t border-blue-200/50 backdrop-blur-sm">
           <Button 
             variant="ghost" 
             className="w-full justify-center gap-2 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 rounded-xl py-2"

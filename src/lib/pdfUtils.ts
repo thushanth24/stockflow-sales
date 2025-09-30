@@ -25,40 +25,44 @@ export interface FormattedItem {
   date?: string;
   operation_type?: string;
   total_value?: number;
+  income_amount?: number;
+  income_date?: string;
+  label?: string;
 }
+
 
 const addTableSection = (doc: jsPDF, title: string, data: FormattedItem[], columns: {name: string, width: number, align?: string, key: keyof FormattedItem}[], yPos: number, pageWidth: number, margin: number) => {
   const isEmptyData = data.length === 0 || (data.length === 1 && data[0].id === 'no-returns');
   // Calculate the starting Y position for the table
   let currentY = yPos + 25; // Space for the title
-  
+
   // Add title
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(59, 130, 246); // Blue-600
   doc.text(title, margin, yPos + 10);
-  
+
   // Draw title underline
   doc.setDrawColor(203, 213, 225); // Slate-300
   doc.setLineWidth(0.5);
   doc.line(margin, yPos + 15, margin + 100, yPos + 15);
-  
+
   // Calculate column positions
   const columnPositions: number[] = [];
   let currentX = margin;
-  
+
   columns.forEach(column => {
     columnPositions.push(currentX);
     currentX += column.width;
   });
-  
+
   // Function to draw table header
   const drawTableHeader = (y: number) => {
     doc.setFillColor(248, 250, 252); // Cool gray-50
     doc.roundedRect(margin, y, pageWidth - (margin * 2), 12, 2, 2, 'F');
     doc.setDrawColor(209, 213, 219); // Gray-300
     doc.roundedRect(margin, y, pageWidth - (margin * 2), 12, 2, 2, 'S');
-    
+
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     columns.forEach((column, index) => {
@@ -72,17 +76,18 @@ const addTableSection = (doc: jsPDF, title: string, data: FormattedItem[], colum
     });
     return y + 15; // Return new Y position after header
   };
-  
+
   // Draw initial table header
   currentY = drawTableHeader(currentY);
-  
+
   // Draw table rows
   doc.setFont('helvetica', 'normal');
   let totalAmount = 0;
-  
+  const totalColumnKey = columns.find(column => column.key === 'revenue' || column.key === 'income_amount' || column.key === 'total_value')?.key;
+
   data.forEach((item, rowIndex) => {
     const rowHeight = 10; // Height of each row
-    
+
     // Check if we need a new page for this row (including header if needed)
     if (currentY + rowHeight > doc.internal.pageSize.getHeight() - 20) {
       doc.addPage();
@@ -90,16 +95,16 @@ const addTableSection = (doc: jsPDF, title: string, data: FormattedItem[], colum
       // Redraw header on new page
       currentY = drawTableHeader(currentY);
     }
-    
+
     // Alternate row colors
     const rowBg = rowIndex % 2 === 0 ? [255, 255, 255] : [248, 250, 252];
     doc.setFillColor(rowBg[0], rowBg[1], rowBg[2]);
     doc.roundedRect(margin, currentY - 2, pageWidth - (margin * 2), rowHeight, 1, 1, 'F');
-    
+
     // Row border
     doc.setDrawColor(226, 232, 240); // Gray-200
     doc.roundedRect(margin, currentY - 2, pageWidth - (margin * 2), rowHeight, 1, 1, 'S');
-    
+
     // Draw cell content
     doc.setFontSize(9);
     columns.forEach((column, colIndex) => {
@@ -110,69 +115,76 @@ const addTableSection = (doc: jsPDF, title: string, data: FormattedItem[], colum
         let align: 'left' | 'center' | 'right' | 'justify' = 'left';
         if (column.align === 'right' || column.align === 'center' || column.align === 'justify') {
           align = column.align;
-        } else if (column.key === 'revenue' || column.key === 'unit_price' || column.key === 'quantity') {
+        } else if (column.key === 'revenue' || column.key === 'unit_price' || column.key === 'quantity' || column.key === 'price' || column.key === 'total_value' || column.key === 'income_amount') {
           // Default to right align for numeric columns
           align = 'right';
         }
-        
-        const displayValue = column.key === 'revenue' || column.key === 'unit_price' 
-          ? `Rs ${Number(value).toFixed(2)}` 
-          : String(value);
-        
+
+        const displayValue = (() => {
+          if (column.key === 'revenue' || column.key === 'unit_price' || column.key === 'price' || column.key === 'total_value' || column.key === 'income_amount') {
+            return `Rs ${Number(value).toFixed(2)}`;
+          }
+          return String(value);
+        })();
+
         doc.text(displayValue, xPos, currentY + 6, { align });
       }
     });
-    
-    // Add to total if this is a revenue column
-    if (columns.some(col => col.key === 'revenue')) {
-      totalAmount += Number(item.revenue || 0);
+
+    // Add to total if applicable
+    if (totalColumnKey) {
+      const numericValue = item[totalColumnKey];
+      totalAmount += Number(numericValue || 0);
     }
-    
+
     currentY += rowHeight; // Move to next row
   });
-  
+
   // Add total row if there's revenue data
   if (totalAmount > 0) {
     const totalRowHeight = 35; // Height of total row + spacing
-    
+
     // Check if we need a new page for the total row
     if (currentY + totalRowHeight > doc.internal.pageSize.getHeight() - 20) {
       doc.addPage();
       currentY = 20;
     }
-    
+
     doc.setFillColor(241, 245, 249); // Slate-50
     doc.roundedRect(margin, currentY, pageWidth - (margin * 2), 15, 2, 2, 'F');
     doc.setDrawColor(203, 213, 225); // Slate-300
     doc.roundedRect(margin, currentY, pageWidth - (margin * 2), 15, 2, 2, 'S');
-    
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.text(`TOTAL ${title.toUpperCase()}:`, margin + 10, currentY + 8);
     doc.setTextColor(59, 130, 246); // Blue-600
     doc.text(`Rs ${totalAmount.toFixed(2)}`, pageWidth - margin - 10, currentY + 8, { align: 'right' });
-    
+
     // Add space after the total row
     currentY += 15;
-    
+
     // Add a subtle separator line between sections
     doc.setDrawColor(226, 232, 240); // Light gray
     doc.setLineWidth(0.5);
     doc.line(margin, currentY, pageWidth - margin, currentY);
-    
+
     // Add space after the separator
     currentY += 20;
   }
-  
+
   return { yPos: currentY, totalAmount };
 };
+
+
 
 export const generateSalesReportPDF = async (
   salesData: FormattedItem[], 
   damageData: FormattedItem[], 
   date: string, 
   returnsData: FormattedItem[] = [],
-  bottlesData: FormattedItem[] = []
+  bottlesData: FormattedItem[] = [],
+  otherIncomeData: FormattedItem[] = []
 ) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -338,7 +350,39 @@ export const generateSalesReportPDF = async (
     margin
   );
   yPos = newYPos;
-  
+
+  // Other Income Section
+  if (otherIncomeData.length > 0) {
+    if (yPos > doc.internal.pageSize.getHeight() - 150) {
+      doc.addPage();
+      yPos = 20;
+    } else {
+      yPos += 25;
+    }
+
+    const otherIncomeColumns = [
+      { name: 'DATE', width: 45, key: 'income_date' as keyof FormattedItem },
+      { name: 'DESCRIPTION', width: 85, key: 'label' as keyof FormattedItem },
+      { name: 'AMOUNT', width: 45, align: 'right' as const, key: 'income_amount' as keyof FormattedItem }
+    ];
+
+    const formattedOtherIncome = otherIncomeData.map(item => ({
+      ...item,
+      income_date: item.income_date || item.display_date || ''
+    }));
+
+    const { yPos: otherIncomeY } = addTableSection(
+      doc,
+      'OTHER INCOME',
+      formattedOtherIncome,
+      otherIncomeColumns,
+      yPos,
+      pageWidth,
+      margin
+    );
+    yPos = otherIncomeY;
+  }
+
   // Bottles Section
   if (bottlesData.length > 0) {
     // Add page break if needed
@@ -381,6 +425,7 @@ export const generateSalesReportPDF = async (
   const totalDamages = damageData.reduce((sum, item) => sum + ((item.unit_price || 0) * item.quantity), 0);
   const totalReturns = returnsData.reduce((sum, item) => sum + (item.revenue || 0), 0);
   const totalBottles = bottlesData.reduce((sum, item) => sum + (item.total_value || 0), 0);
+  const totalOtherIncome = otherIncomeData.reduce((sum, item) => sum + (item.income_amount || 0), 0);
   
   // Summary Section
   const summaryY = doc.internal.pageSize.getHeight() - summaryContentHeight;
@@ -398,7 +443,7 @@ export const generateSalesReportPDF = async (
   doc.text('SUMMARY', margin + 10, summaryY + 5);
   
   // If no data at all, show a message
-  if (salesData.length === 0 && damageData.length === 0 && returnsData.length === 0 && bottlesData.length === 0) {
+  if (salesData.length === 0 && damageData.length === 0 && returnsData.length === 0 && bottlesData.length === 0 && otherIncomeData.length === 0) {
     doc.setFont('helvetica', 'italic');
     doc.setTextColor(100, 100, 100);
     doc.text('No data available for the selected period.', margin + 10, summaryY + 25);
@@ -428,17 +473,24 @@ export const generateSalesReportPDF = async (
   }
   
   // Damages (if any)
-  if (damageData.length > 0) {
+  if (totalDamages > 0) {
     currentY += 10;
     doc.text('Damages:', margin + 20, currentY);
     doc.text(`- Rs ${totalDamages.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
   }
   
+  // Other Income (if any)
+  if (totalOtherIncome > 0) {
+    currentY += 10;
+    doc.text('Other Income:', margin + 20, currentY);
+    doc.text(`+ Rs ${totalOtherIncome.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
+  }
+
   // Net Total
   currentY += 15;
   doc.setFont('helvetica', 'bold');
   doc.text('Net Total:', margin + 20, currentY);
-  const netTotal = totalSales - totalReturns - totalBottles;
+  const netTotal = totalSales - totalReturns - totalBottles - totalDamages + totalOtherIncome;
   doc.text(`Rs ${netTotal.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
   
   // Add a line above the summary

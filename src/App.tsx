@@ -20,6 +20,7 @@ import RestoreSalesPage from "@/pages/staff/RestoreSalesPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
 import StockOverviewPage from "@/pages/admin/StockOverviewPage";
 import DamageReportsPage from "@/pages/admin/DamageReportsPage";
+import OtherIncomePage from "@/pages/admin/OtherIncomePage";
 import CategoriesPage from "@/pages/admin/CategoriesPage";
 import UserManagementPage from "@/pages/admin/UserManagementPage";
 import AuditLogsPage from "@/pages/admin/AuditLogsPage";
@@ -88,6 +89,10 @@ const App = () => {
     {
       path: "/dashboard/damage-reports",
       element: <ProtectedRoute allowedRoles={['admin', 'super_admin']}><DashboardLayoutWrapper><DamageReportsPage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
+      path: "/dashboard/other-income",
+      element: <ProtectedRoute allowedRoles={['admin', 'super_admin']}><DashboardLayoutWrapper><OtherIncomePage /></DashboardLayoutWrapper></ProtectedRoute>,
     },
     {
       path: "/dashboard/categories",

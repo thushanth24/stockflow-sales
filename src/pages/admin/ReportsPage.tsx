@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { DataExport } from '@/components/DataExport';
-import { BarChart3, TrendingUp, Package, DollarSign, Download } from 'lucide-react';
+import { BarChart3, TrendingUp, Package, DollarSign, Download, Wallet } from 'lucide-react';
 import { generateSalesReportPDF, downloadPDF } from '@/lib/pdfUtils';
 
 interface SalesData {
@@ -28,6 +28,7 @@ interface DashboardStats {
   totalSales: number;
   totalProducts: number;
   totalDamages: number;
+  totalOtherIncome: number;
 }
 
 export default function ReportsPage() {
@@ -37,6 +38,7 @@ export default function ReportsPage() {
     totalSales: 0,
     totalProducts: 0,
     totalDamages: 0,
+    totalOtherIncome: 0,
   });
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
@@ -85,7 +87,7 @@ export default function ReportsPage() {
       setSales(salesData || []);
 
       // Fetch dashboard stats
-      const [revenueResult, productsResult, damagesResult] = await Promise.all([
+      const [revenueResult, productsResult, damagesResult, otherIncomeResult] = await Promise.all([
         supabase
           .from('sales')
           .select('revenue, quantity')
@@ -99,22 +101,30 @@ export default function ReportsPage() {
           .select('quantity')
           .gte('damage_date', dateRange.from)
           .lte('damage_date', dateRange.to),
+        supabase
+          .from('other_income_entries')
+          .select('amount')
+          .gte('income_date', dateRange.from)
+          .lte('income_date', dateRange.to),
       ]);
 
       if (revenueResult.error) throw revenueResult.error;
       if (productsResult.error) throw productsResult.error;
       if (damagesResult.error) throw damagesResult.error;
+      if (otherIncomeResult.error) throw otherIncomeResult.error;
 
       const totalRevenue = revenueResult.data?.reduce((sum, sale) => sum + Number(sale.revenue), 0) || 0;
       const totalSales = revenueResult.data?.reduce((sum, sale) => sum + sale.quantity, 0) || 0;
       const totalProducts = productsResult.data?.length || 0;
       const totalDamages = damagesResult.data?.reduce((sum, damage) => sum + damage.quantity, 0) || 0;
+      const totalOtherIncome = otherIncomeResult.data?.reduce((sum, income) => sum + Number(income.amount), 0) || 0;
 
       setStats({
         totalRevenue,
         totalSales,
         totalProducts,
         totalDamages,
+        totalOtherIncome,
       });
     } catch (error) {
       console.error('Error fetching reports data:', error);
@@ -188,6 +198,15 @@ export default function ReportsPage() {
     total_value: number;
   }
 
+  interface FormattedOtherIncome {
+    id: number;
+    quantity: number;
+    label: string;
+    income_amount: number;
+    income_date: string;
+  }
+
+
   const handleExportPDF = async () => {
     try {
       setIsGeneratingPDF(true);
@@ -238,6 +257,17 @@ export default function ReportsPage() {
 
       if (damageError) throw damageError;
 
+      // Fetch other income data for the same period
+      const { data: otherIncomeData, error: otherIncomeError } = await supabase
+        .from('other_income_entries')
+        .select('id, label, amount, income_date')
+        .gte('income_date', dateRange.from)
+        .lte('income_date', dateRange.to)
+        .order('income_date', { ascending: false });
+
+      if (otherIncomeError) throw otherIncomeError;
+
+
       // Flatten the nested data structure
       const formattedSales: FormattedSale[] = (salesData || []).map(sale => ({
         id: sale.id,
@@ -280,6 +310,15 @@ export default function ReportsPage() {
         total_value: (bottle.quantity || 0) * (bottle.price || 0)
       }));
 
+      const formattedOtherIncome: FormattedOtherIncome[] = (otherIncomeData || []).map(entry => ({
+        quantity: 0,
+        id: entry.id,
+        label: entry.label || '',
+        income_amount: Number(entry.amount) || 0,
+        income_date: entry.income_date ? new Date(entry.income_date).toLocaleDateString() : ''
+      }));
+
+
       // Generate and download PDF
       const reportDate = dateRange.from === dateRange.to 
         ? dateRange.from 
@@ -290,7 +329,8 @@ export default function ReportsPage() {
         formattedDamages,
         reportDate,
         [], // Empty array for returns (if not used)
-        formattedBottles
+        formattedBottles,
+        formattedOtherIncome
       );
       
       const filename = `Regal-Sales-Report-${new Date().toISOString().split('T')[0]}.pdf`;
@@ -437,7 +477,7 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-2 grid-cols-2 xs:grid-cols-2 md:grid-cols-4 mt-2 sm:mt-3">
+      <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 mt-2 sm:mt-3">
         <Card className="border-0 shadow-xs hover:shadow-sm transition-all duration-100 h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-1.5 sm:p-2 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -447,6 +487,17 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent className="p-3 sm:p-4">
             <div className="text-sm sm:text-base font-medium">Rs{stats.totalRevenue.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-xs hover:shadow-sm transition-all duration-100 h-full">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-1.5 sm:p-2 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <CardTitle className="text-sm font-medium">Other Income</CardTitle>
+            <div className="p-2 rounded-full bg-orange-100 text-orange-600">
+              <Wallet className="h-4 w-4" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-sm sm:text-base font-medium">Rs{stats.totalOtherIncome.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-xs hover:shadow-sm transition-all duration-100 h-full">
@@ -555,4 +606,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-

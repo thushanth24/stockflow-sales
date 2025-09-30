@@ -23,6 +23,12 @@ interface DamagesRow extends BaseRow {
   reason: string;
 }
 
+interface OtherIncomeRow {
+  label: string;
+  amount: number;
+  income_date: string;
+}
+
 interface CurrentStockRow {
   category_name: string;
   product_name: string;
@@ -52,6 +58,7 @@ export function DataExport() {
     { value: 'current_stock', label: 'Current Stock', dateField: null },
     { value: 'purchases', label: 'Purchases', dateField: 'purchase_date' },
     { value: 'damages', label: 'Damage Reports', dateField: 'damage_date' },
+    { value: 'other_income_entries', label: 'Other Income', dateField: 'income_date' },
     { value: 'stock_updates', label: 'Stock Updates', dateField: 'update_date' },
     { value: 'sales', label: 'Sales Data', dateField: 'sale_date' },
     { value: 'role_change_audit', label: 'Audit Logs', dateField: 'changed_at' },
@@ -237,6 +244,34 @@ export function DataExport() {
         }
 
         data = damagesData;
+      } else if (options.table === 'other_income_entries') {
+        let query = supabase
+          .from('other_income_entries')
+          .select('income_date, label, amount')
+          .gte('income_date', options.dateFrom)
+          .lte('income_date', options.dateTo)
+          .order('income_date', { ascending: false });
+
+        const { data: tableData, error: tableError } = await query;
+        if (tableError) throw tableError;
+
+        const incomeRows: OtherIncomeRow[] = (tableData ?? []).map(record => ({
+          income_date: record.income_date || '',
+          label: record.label || '',
+          amount: Number(record.amount) || 0
+        }));
+
+        const totalIncome = incomeRows.reduce((sum, entry) => sum + (entry.amount || 0), 0);
+
+        if (incomeRows.length > 0) {
+          incomeRows.push({
+            income_date: 'Total:',
+            label: '',
+            amount: totalIncome
+          });
+        }
+
+        data = incomeRows;
       } else if (options.table === 'current_stock') {
         // Get current stock of all products with category information
         const { data: tableData, error: tableError } = await supabase
@@ -263,7 +298,7 @@ export function DataExport() {
         data = currentStockData;
       } else {
         // Handle other tables normally
-        const tableName = options.table as 'products' | 'purchases' | 'damages' | 'stock_updates' | 'sales' | 'role_change_audit' | 'profiles' | 'stock_updates_archive';
+        const tableName = options.table as 'products' | 'purchases' | 'damages' | 'stock_updates' | 'sales' | 'role_change_audit' | 'profiles' | 'stock_updates_archive' | 'other_income_entries';
         let query = supabase.from(tableName).select('*');
 
         // Apply date filter if table has date field

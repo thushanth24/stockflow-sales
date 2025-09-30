@@ -125,6 +125,21 @@ export default function Dashboard() {
 
       if (returnsError) throw returnsError;
       
+      // Fetch other income data
+      const { data: otherIncomeData, error: otherIncomeError } = await supabase
+        .from('other_income_entries')
+        .select(`
+          id,
+          label,
+          amount,
+          income_date
+        `)
+        .gte('income_date', dateRange.from)
+        .lte('income_date', dateRange.to)
+        .order('income_date', { ascending: false });
+
+      if (otherIncomeError) throw otherIncomeError;
+      
       // Fetch bottle data (only added bottles, not cleared ones)
       const { data: bottlesData, error: bottlesError } = await supabase
         .from('bottles')
@@ -173,6 +188,15 @@ export default function Dashboard() {
         };
       });
       
+      // Format other income data
+      const formattedOtherIncome = (otherIncomeData || []).map(entry => ({
+        quantity: 0,
+        id: entry.id,
+        label: entry.label || '',
+        income_amount: Number(entry.amount) || 0,
+        income_date: entry.income_date ? new Date(entry.income_date).toLocaleDateString() : ''
+      }));
+
       // Format bottle data
       const formattedBottles = (bottlesData || []).map(bottle => ({
         id: bottle.id,
@@ -199,7 +223,8 @@ export default function Dashboard() {
         formattedDamages,
         reportDate,
         formattedReturns,
-        formattedBottles
+        formattedBottles,
+        formattedOtherIncome
       );
       
       const filename = `Regal-Sales-Report-${new Date().toISOString().split('T')[0]}.pdf`;
