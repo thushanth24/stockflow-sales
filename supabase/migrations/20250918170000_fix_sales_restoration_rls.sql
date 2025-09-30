@@ -16,6 +16,8 @@ DECLARE
   v_new_quantity INTEGER;
   v_debug_info JSONB;
   v_rows_affected INTEGER;
+  v_revenue_per_unit NUMERIC := 0;
+  v_new_revenue NUMERIC := 0;
 BEGIN
   -- Log function start
   RAISE NOTICE 'Starting restoration for sale_id: %', p_sale_id;
@@ -91,16 +93,27 @@ BEGIN
       RAISE NOTICE 'Error deleting from sales: %', SQLERRM;
     END;
   ELSE
-    -- If partial restore, reduce the quantity
+    -- If partial restore, reduce the quantity and adjust revenue
     RAISE NOTICE 'PARTIAL RESTORATION: Reducing quantity by % for sale %', 
       v_restored_quantity, p_sale_id;
       
+    IF v_sale.quantity > 0 THEN
+      v_revenue_per_unit := v_sale.revenue / v_sale.quantity;
+    ELSE
+      v_revenue_per_unit := 0;
+    END IF;
+    
+    v_new_revenue := GREATEST(0, ROUND((v_sale.revenue - (v_revenue_per_unit * v_restored_quantity))::numeric, 2));
+    
+    RAISE NOTICE 'Calculated revenue per unit: %, new revenue: %', v_revenue_per_unit, v_new_revenue;
+      
     UPDATE sales 
-    SET quantity = quantity - v_restored_quantity
+    SET quantity = quantity - v_restored_quantity,
+        revenue = v_new_revenue
     WHERE id = p_sale_id
     RETURNING * INTO v_sale;
     
-    RAISE NOTICE 'Updated sale quantity to %', v_sale.quantity;
+    RAISE NOTICE 'Updated sale quantity to %, revenue to %', v_sale.quantity, v_sale.revenue;
   END IF;
   
   v_debug_info := jsonb_build_object(
@@ -111,6 +124,7 @@ BEGIN
     'sale_deleted', v_restored_quantity = v_original_quantity,
     'original_quantity', v_original_quantity,
     'sale_quantity', v_sale.quantity,
+    'sale_revenue', CASE WHEN v_restored_quantity = v_original_quantity THEN 0 ELSE v_sale.revenue END,
     'deleted', v_restored_quantity = v_original_quantity,
     'sale_id', p_sale_id,
     'product_id', p_product_id,
