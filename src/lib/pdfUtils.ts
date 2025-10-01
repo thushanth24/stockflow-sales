@@ -27,6 +27,8 @@ export interface FormattedItem {
   total_value?: number;
   income_amount?: number;
   income_date?: string;
+  expense_amount?: number;
+  expense_date?: string;
   label?: string;
 }
 
@@ -83,7 +85,7 @@ const addTableSection = (doc: jsPDF, title: string, data: FormattedItem[], colum
   // Draw table rows
   doc.setFont('helvetica', 'normal');
   let totalAmount = 0;
-  const totalColumnKey = columns.find(column => column.key === 'revenue' || column.key === 'income_amount' || column.key === 'total_value')?.key;
+  const totalColumnKey = columns.find(column => column.key === 'revenue' || column.key === 'income_amount' || column.key === 'expense_amount' || column.key === 'total_value')?.key;
 
   data.forEach((item, rowIndex) => {
     const rowHeight = 10; // Height of each row
@@ -115,13 +117,13 @@ const addTableSection = (doc: jsPDF, title: string, data: FormattedItem[], colum
         let align: 'left' | 'center' | 'right' | 'justify' = 'left';
         if (column.align === 'right' || column.align === 'center' || column.align === 'justify') {
           align = column.align;
-        } else if (column.key === 'revenue' || column.key === 'unit_price' || column.key === 'quantity' || column.key === 'price' || column.key === 'total_value' || column.key === 'income_amount') {
+        } else if (column.key === 'revenue' || column.key === 'unit_price' || column.key === 'quantity' || column.key === 'price' || column.key === 'total_value' || column.key === 'income_amount' || column.key === 'expense_amount') {
           // Default to right align for numeric columns
           align = 'right';
         }
 
         const displayValue = (() => {
-          if (column.key === 'revenue' || column.key === 'unit_price' || column.key === 'price' || column.key === 'total_value' || column.key === 'income_amount') {
+          if (column.key === 'revenue' || column.key === 'unit_price' || column.key === 'price' || column.key === 'total_value' || column.key === 'income_amount' || column.key === 'expense_amount') {
             return `Rs ${Number(value).toFixed(2)}`;
           }
           return String(value);
@@ -184,7 +186,8 @@ export const generateSalesReportPDF = async (
   date: string, 
   returnsData: FormattedItem[] = [],
   bottlesData: FormattedItem[] = [],
-  otherIncomeData: FormattedItem[] = []
+  otherIncomeData: FormattedItem[] = [],
+  otherExpenseData: FormattedItem[] = []
 ) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -383,6 +386,38 @@ export const generateSalesReportPDF = async (
     yPos = otherIncomeY;
   }
 
+  // Other Expenses Section
+  if (otherExpenseData.length > 0) {
+    if (yPos > doc.internal.pageSize.getHeight() - 150) {
+      doc.addPage();
+      yPos = 20;
+    } else {
+      yPos += 25;
+    }
+
+    const otherExpenseColumns = [
+      { name: 'DATE', width: 45, key: 'expense_date' as keyof FormattedItem },
+      { name: 'DESCRIPTION', width: 85, key: 'label' as keyof FormattedItem },
+      { name: 'AMOUNT', width: 45, align: 'right' as const, key: 'expense_amount' as keyof FormattedItem }
+    ];
+
+    const formattedOtherExpenses = otherExpenseData.map(item => ({
+      ...item,
+      expense_date: item.expense_date || item.display_date || ''
+    }));
+
+    const { yPos: otherExpenseY } = addTableSection(
+      doc,
+      'OTHER EXPENSES',
+      formattedOtherExpenses,
+      otherExpenseColumns,
+      yPos,
+      pageWidth,
+      margin
+    );
+    yPos = otherExpenseY;
+  }
+
   // Bottles Section
   if (bottlesData.length > 0) {
     // Add page break if needed
@@ -406,11 +441,25 @@ export const generateSalesReportPDF = async (
     yPos = newYPos;
   }
   
+  // Calculate totals (use 0 if no data)
+  const totalSales = salesData.reduce((sum, item) => sum + (item.revenue || 0), 0);
+  const totalDamages = damageData.reduce((sum, item) => sum + ((item.unit_price || 0) * item.quantity), 0);
+  const totalReturns = returnsData.reduce((sum, item) => sum + (item.revenue || 0), 0);
+  const totalBottles = bottlesData.reduce((sum, item) => sum + (item.total_value || 0), 0);
+  const totalOtherIncome = otherIncomeData.reduce((sum, item) => sum + (item.income_amount || 0), 0);
+  const totalOtherExpenses = otherExpenseData.reduce((sum, item) => sum + (item.expense_amount || 0), 0);
+
   // Calculate required height for summary section
   const summaryHeaderHeight = 15; // Space for "SUMMARY" header
-  const summaryContentHeight = bottlesData.length > 0 ? 80 : 60; // Height based on content
+  const additionalSummaryRows =
+    (totalReturns > 0 ? 1 : 0) +
+    (totalBottles > 0 ? 1 : 0) +
+    (totalDamages > 0 ? 1 : 0) +
+    (totalOtherIncome > 0 ? 1 : 0) +
+    (totalOtherExpenses > 0 ? 1 : 0);
+  const summaryContentHeight = 70 + additionalSummaryRows * 10;
   const totalSummaryHeight = summaryHeaderHeight + summaryContentHeight;
-  
+
   // Check if we need a new page for the summary
   if (yPos + totalSummaryHeight > doc.internal.pageSize.getHeight() - margin) {
     doc.addPage();
@@ -419,66 +468,59 @@ export const generateSalesReportPDF = async (
     // Add some space before the summary if we're not at the top of the page
     yPos += 20;
   }
-  
-  // Calculate totals (use 0 if no data)
-  const totalSales = salesData.reduce((sum, item) => sum + (item.revenue || 0), 0);
-  const totalDamages = damageData.reduce((sum, item) => sum + ((item.unit_price || 0) * item.quantity), 0);
-  const totalReturns = returnsData.reduce((sum, item) => sum + (item.revenue || 0), 0);
-  const totalBottles = bottlesData.reduce((sum, item) => sum + (item.total_value || 0), 0);
-  const totalOtherIncome = otherIncomeData.reduce((sum, item) => sum + (item.income_amount || 0), 0);
-  
+
   // Summary Section
   const summaryY = doc.internal.pageSize.getHeight() - summaryContentHeight;
   yPos = summaryY;
-  
+
   // Add summary section background
   doc.setFillColor(249, 250, 251); // Gray-50
   doc.rect(margin, summaryY - 10, pageWidth - (margin * 2), summaryContentHeight, 'F');
   doc.roundedRect(margin, summaryY - 10, pageWidth - (margin * 2), summaryContentHeight, 3, 3, 'S');
-  
+
   // Summary title
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(31, 41, 55); // Gray-800
   doc.text('SUMMARY', margin + 10, summaryY + 5);
-  
+
   // If no data at all, show a message
-  if (salesData.length === 0 && damageData.length === 0 && returnsData.length === 0 && bottlesData.length === 0 && otherIncomeData.length === 0) {
+  if (salesData.length === 0 && damageData.length === 0 && returnsData.length === 0 && bottlesData.length === 0 && otherIncomeData.length === 0 && otherExpenseData.length === 0) {
     doc.setFont('helvetica', 'italic');
     doc.setTextColor(100, 100, 100);
     doc.text('No data available for the selected period.', margin + 10, summaryY + 25);
     return doc;
   }
-  
+
   // Summary values
   doc.setFont('helvetica', 'normal');
   let currentY = summaryY + 20;
-  
+
   // Total Sales
   doc.text('Total Sales:', margin + 20, currentY);
   doc.text(`Rs ${totalSales.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
-  
+
   // Returns (if any)
   if (totalReturns > 0) {
     currentY += 10;
     doc.text('Total Returns:', margin + 20, currentY);
     doc.text(`- Rs ${totalReturns.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
   }
-  
+
   // Bottles (if any)
   if (totalBottles > 0) {
     currentY += 10;
     doc.text('Bottles Added:', margin + 20, currentY);
     doc.text(`- Rs ${totalBottles.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
   }
-  
+
   // Damages (if any)
   if (totalDamages > 0) {
     currentY += 10;
     doc.text('Damages:', margin + 20, currentY);
     doc.text(`- Rs ${totalDamages.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
   }
-  
+
   // Other Income (if any)
   if (totalOtherIncome > 0) {
     currentY += 10;
@@ -486,18 +528,25 @@ export const generateSalesReportPDF = async (
     doc.text(`+ Rs ${totalOtherIncome.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
   }
 
+  // Other Expenses (if any)
+  if (totalOtherExpenses > 0) {
+    currentY += 10;
+    doc.text('Other Expenses:', margin + 20, currentY);
+    doc.text(`- Rs ${totalOtherExpenses.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
+  }
+
   // Net Total
   currentY += 15;
   doc.setFont('helvetica', 'bold');
   doc.text('Net Total:', margin + 20, currentY);
-  const netTotal = totalSales - totalReturns - totalBottles - totalDamages + totalOtherIncome;
+  const netTotal = totalSales - totalReturns - totalBottles - totalDamages + totalOtherIncome - totalOtherExpenses;
   doc.text(`Rs ${netTotal.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
-  
+
   // Add a line above the summary
   doc.setDrawColor(209, 213, 219); // Gray-300
   doc.setLineWidth(0.5);
   doc.line(margin, summaryY - 15, pageWidth - margin, summaryY - 15);
-  
+
   // Add footer with timestamp
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(8);
@@ -516,3 +565,4 @@ export const generateSalesReportPDF = async (
 export const downloadPDF = (doc: jsPDF, filename: string) => {
   doc.save(`${filename}_${new Date().toISOString().split('T')[0]}.pdf`);
 };
+

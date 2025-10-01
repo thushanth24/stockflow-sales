@@ -21,6 +21,7 @@ import ReportsPage from "@/pages/admin/ReportsPage";
 import StockOverviewPage from "@/pages/admin/StockOverviewPage";
 import DamageReportsPage from "@/pages/admin/DamageReportsPage";
 import OtherIncomePage from "@/pages/admin/OtherIncomePage";
+import OtherExpensePage from "@/pages/admin/OtherExpensePage";
 import CategoriesPage from "@/pages/admin/CategoriesPage";
 import UserManagementPage from "@/pages/admin/UserManagementPage";
 import AuditLogsPage from "@/pages/admin/AuditLogsPage";
@@ -95,6 +96,10 @@ const App = () => {
       element: <ProtectedRoute allowedRoles={['admin', 'super_admin']}><DashboardLayoutWrapper><OtherIncomePage /></DashboardLayoutWrapper></ProtectedRoute>,
     },
     {
+      path: "/dashboard/other-expenses",
+      element: <ProtectedRoute allowedRoles={['admin', 'super_admin']}><DashboardLayoutWrapper><OtherExpensePage /></DashboardLayoutWrapper></ProtectedRoute>,
+    },
+    {
       path: "/dashboard/categories",
       element: <ProtectedRoute allowedRoles={['staff', 'admin', 'super_admin']}><DashboardLayoutWrapper><CategoriesPage /></DashboardLayoutWrapper></ProtectedRoute>,
     },
@@ -140,3 +145,8 @@ const App = () => {
 };
 
 export default App;
+
+
+
+
+

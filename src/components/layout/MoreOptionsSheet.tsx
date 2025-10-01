@@ -6,6 +6,7 @@ import {
   Users,
   AlertTriangle,
   Wallet,
+  Receipt,
   Package2,
   Shield,
   LogOut,
@@ -54,6 +55,7 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
   const adminItems = [
     { icon: BarChart3, label: 'Reports', href: '/dashboard/reports' },
     { icon: Wallet, label: 'Other Income', href: '/dashboard/other-income' },
+    { icon: Receipt, label: 'Other Expenses', href: '/dashboard/other-expenses' },
     { icon: AlertTriangle, label: 'Damage Reports', href: '/dashboard/damage-reports' },
   ];
 
@@ -252,3 +254,5 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
     </>
   );
 }
+
+

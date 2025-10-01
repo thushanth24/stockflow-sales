@@ -23,6 +23,7 @@ import {
   LayoutDashboard,
   RefreshCw,
   Wallet,
+  Receipt,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
@@ -67,6 +68,7 @@ export function Sidebar() {
     { icon: BarChart3, label: 'Reports', href: '/dashboard/reports' },
     { icon: Package, label: 'Stock Overview', href: '/dashboard/stock-overview' },
     { icon: Wallet, label: 'Other Income', href: '/dashboard/other-income' },
+    { icon: Receipt, label: 'Other Expenses', href: '/dashboard/other-expenses' },
     { icon: AlertTriangle, label: 'Damage Reports', href: '/dashboard/damage-reports' },
   ];
 
@@ -250,3 +252,6 @@ export function Sidebar() {
     </SidebarBase>
   );
 }
+
+
+

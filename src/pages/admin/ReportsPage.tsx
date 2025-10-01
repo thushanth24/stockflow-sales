@@ -198,12 +198,21 @@ export default function ReportsPage() {
     total_value: number;
   }
 
+
   interface FormattedOtherIncome {
     id: number;
     quantity: number;
     label: string;
     income_amount: number;
     income_date: string;
+  }
+
+  interface FormattedOtherExpense {
+    id: number;
+    quantity: number;
+    label: string;
+    expense_amount: number;
+    expense_date: string;
   }
 
 
@@ -267,6 +276,16 @@ export default function ReportsPage() {
 
       if (otherIncomeError) throw otherIncomeError;
 
+      // Fetch other expense data for the same period
+      const { data: otherExpenseData, error: otherExpenseError } = await supabase
+        .from('other_expense_entries')
+        .select('id, label, amount, expense_date')
+        .gte('expense_date', dateRange.from)
+        .lte('expense_date', dateRange.to)
+        .order('expense_date', { ascending: false });
+
+      if (otherExpenseError) throw otherExpenseError;
+
 
       // Flatten the nested data structure
       const formattedSales: FormattedSale[] = (salesData || []).map(sale => ({
@@ -318,6 +337,14 @@ export default function ReportsPage() {
         income_date: entry.income_date ? new Date(entry.income_date).toLocaleDateString() : ''
       }));
 
+      const formattedOtherExpenses: FormattedOtherExpense[] = (otherExpenseData || []).map(entry => ({
+        quantity: 0,
+        id: entry.id,
+        label: entry.label || '',
+        expense_amount: Number(entry.amount) || 0,
+        expense_date: entry.expense_date ? new Date(entry.expense_date).toLocaleDateString() : ''
+      }));
+
 
       // Generate and download PDF
       const reportDate = dateRange.from === dateRange.to 
@@ -330,7 +357,8 @@ export default function ReportsPage() {
         reportDate,
         [], // Empty array for returns (if not used)
         formattedBottles,
-        formattedOtherIncome
+        formattedOtherIncome,
+        formattedOtherExpenses
       );
       
       const filename = `Regal-Sales-Report-${new Date().toISOString().split('T')[0]}.pdf`;
@@ -606,3 +634,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+
