@@ -6,6 +6,8 @@ import {
   Tag, 
   BarChart3, 
   AlertTriangle,
+  Wallet,
+  Receipt,
   X,
   Package as BottleIcon,
   RotateCcw
@@ -17,22 +19,7 @@ interface FloatingActionButtonProps {
 }
 
 const actionItems = [
-  {
-    id: 'add-product',
-    label: 'Add Product',
-    icon: Package,
-    href: '/dashboard/products',
-    color: 'bg-blue-500 hover:bg-blue-600',
-    iconColor: 'text-white'
-  },
-  {
-    id: 'add-category',
-    label: 'Add Category',
-    icon: Tag,
-    href: '/dashboard/categories',
-    color: 'bg-green-500 hover:bg-green-600',
-    iconColor: 'text-white'
-  },
+ 
   {
     id: 'bottles',
     label: 'Bottles',
@@ -47,6 +34,22 @@ const actionItems = [
     icon: BarChart3,
     href: '/dashboard/stock-overview',
     color: 'bg-purple-500 hover:bg-purple-600',
+    iconColor: 'text-white'
+  },
+  {
+    id: 'other-income',
+    label: 'Other Income',
+    icon: Wallet,
+    href: '/dashboard/other-income',
+    color: 'bg-orange-500 hover:bg-orange-600',
+    iconColor: 'text-white'
+  },
+  {
+    id: 'other-expenses',
+    label: 'Other Expenses',
+    icon: Receipt,
+    href: '/dashboard/other-expenses',
+    color: 'bg-rose-500 hover:bg-rose-600',
     iconColor: 'text-white'
   },
   {
