@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Download, FileText, Database } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 
 interface BaseRow {
   product_name: string;
@@ -38,7 +39,7 @@ interface CurrentStockRow {
 
 interface ExportOptions {
   table: string;
-  format: 'csv' | 'json';
+  format: 'csv' | 'json' | 'pdf';
   dateFrom: string;
   dateTo: string;
 }
@@ -104,6 +105,149 @@ export function DataExport() {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+  };
+
+  const downloadPDF = async (data: any[], filename: string, tableName: string) => {
+    try {
+      // Create a new PDF document
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      let yPos = 20;
+
+      // Add header
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${tableName} Report`, pageWidth / 2, yPos, { align: 'center' });
+      
+      // Add date range
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(
+        `Date Range: ${new Date(options.dateFrom).toLocaleDateString()} - ${new Date(options.dateTo).toLocaleDateString()}`,
+        pageWidth / 2,
+        yPos + 10,
+        { align: 'center' } as any
+      );
+
+      yPos += 30;
+
+      // Add table headers
+      const headers = Object.keys(data[0] || {});
+      const columnWidth = (pageWidth - margin * 2) / Math.min(headers.length, 5);
+      const headerHeight = 8; // Slightly reduced header height
+      
+      // Draw table header
+      doc.setFillColor(59, 130, 246);
+      doc.rect(margin, yPos, pageWidth - margin * 2, headerHeight, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9); // Slightly smaller header font
+      
+      // Draw header cells with borders and centered text
+      headers.slice(0, 5).forEach((header, i) => {
+        // Draw cell border
+        doc.setDrawColor(255, 255, 255);
+        doc.rect(
+          margin + i * columnWidth,
+          yPos,
+          columnWidth,
+          headerHeight,
+          'S'
+        );
+        
+        // Draw header text
+        doc.text(
+          header,
+          margin + i * columnWidth + columnWidth / 2, // Center horizontally
+          yPos + headerHeight / 2 + 2, // Center vertically
+          { 
+            align: 'center',
+            baseline: 'middle'
+          } as any
+        );
+      });
+
+      yPos += headerHeight + 2; // Add small gap after header
+
+      // Add table rows with optimized spacing
+      doc.setTextColor(0, 0, 0);
+      const rowsToShow = data.slice(0, 100); // Increased from 50 to 100 max rows
+      const rowHeight = 15; // Reduced from 10 to 8 for tighter spacing
+      const maxRowsPerPage = Math.floor((doc.internal.pageSize.getHeight() - yPos - 15) / rowHeight);
+      
+      rowsToShow.forEach((row: any, rowIndex: number) => {
+        // Check if we need a new page (leaving 15mm margin at bottom)
+        if (yPos + rowHeight > doc.internal.pageSize.getHeight() - 15) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        // Draw row background for better readability (alternating colors)
+        if (rowIndex % 2 === 0) {
+          doc.setFillColor(245, 245, 245);
+          doc.rect(margin, yPos, pageWidth - margin * 2, rowHeight, 'F');
+        }
+        
+        // Draw cell borders and content
+        headers.slice(0, 5).forEach((header, colIndex) => {
+          const value = row[header] !== undefined ? String(row[header]) : '';
+          doc.setTextColor(0, 0, 0);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          
+          // Draw cell border
+          doc.setDrawColor(200, 200, 200);
+          doc.rect(
+            margin + colIndex * columnWidth,
+            yPos,
+            columnWidth,
+            rowHeight,
+            'S'
+          );
+          
+          // Draw text with truncation
+          const textOptions = {
+            maxWidth: columnWidth - 6,
+            align: 'left' as const,
+            baseline: 'middle' as const
+          };
+          
+          doc.text(
+            value,
+            margin + colIndex * columnWidth + 3,
+            yPos + rowHeight / 2 + 1,
+            textOptions as any
+          );
+        });
+        
+        yPos += rowHeight; // Move to next row position
+
+      }); // Close forEach loop for rows
+      
+      // Save the PDF
+      const pdfOutput = doc.output('blob');
+      
+      // Create download link
+      const url = window.URL.createObjectURL(pdfOutput);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${filename}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      return true;
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF',
+        variant: 'destructive',
+      });
+      return false;
+    }
   };
 
   const handleExport = async () => {
@@ -322,23 +466,33 @@ export function DataExport() {
         return;
       }
 
-      const filename = `${options.table}_${options.dateFrom}_to_${options.dateTo}.${options.format}`;
-
-      if (options.format === 'csv') {
-        downloadCSV(data, filename);
-      } else {
-        downloadJSON(data, filename);
+      const baseFilename = `${options.table}_${new Date().toISOString().split('T')[0]}`;
+      let success = false;
+      switch (options.format) {
+        case 'csv':
+          downloadCSV(data, `${baseFilename}.csv`);
+          success = true;
+          break;
+        case 'json':
+          downloadJSON(data, `${baseFilename}.json`);
+          success = true;
+          break;
+        case 'pdf':
+          success = await downloadPDF(data, baseFilename, tableInfo?.label || options.table);
+          break;
       }
-
+      
+      if (success) {
+        toast({
+          title: 'Export Successful',
+          description: `Exported ${data.length} records as ${options.format.toUpperCase()}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error exporting data:', error);
       toast({
-        title: 'Export Successful',
-        description: `Exported ${data.length} records as ${options.format.toUpperCase()}`,
-      });
-    } catch (error: any) {
-      console.error('Export error:', error);
-      toast({
-        title: 'Export Failed',
-        description: error.message || 'Failed to export data',
+        title: 'Error',
+        description: 'Failed to export data',
         variant: 'destructive',
       });
     } finally {
@@ -349,24 +503,21 @@ export function DataExport() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Database className="h-5 w-5" />
-          Data Export
-        </CardTitle>
+        <CardTitle>Data Export</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
+      <CardContent>
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="table">Select Table</Label>
+            <Label htmlFor="table">Table</Label>
             <Select
               value={options.table}
-              onValueChange={(value) => setOptions({ ...options, table: value })}
+              onValueChange={(value: string) => setOptions({ ...options, table: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choose data to export" />
+                <SelectValue placeholder="Select table" />
               </SelectTrigger>
               <SelectContent>
-                {exportTables.map((table) => (
+                {exportTables.map(table => (
                   <SelectItem key={table.value} value={table.value}>
                     {table.label}
                   </SelectItem>
@@ -376,17 +527,33 @@ export function DataExport() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="format">Export Format</Label>
+            <Label htmlFor="format">Format</Label>
             <Select
               value={options.format}
-              onValueChange={(value: 'csv' | 'json') => setOptions({ ...options, format: value })}
+              onValueChange={(value: 'csv' | 'json' | 'pdf') => setOptions({ ...options, format: value })}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select format" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="csv">CSV (Excel Compatible)</SelectItem>
-                <SelectItem value="json">JSON (Developer Friendly)</SelectItem>
+                <SelectItem value="csv">
+                  <div className="flex items-center">
+                    <FileText className="mr-2 h-4 w-4" />
+                    CSV (Excel Compatible)
+                  </div>
+                </SelectItem>
+                <SelectItem value="json">
+                  <div className="flex items-center">
+                    <Database className="mr-2 h-4 w-4" />
+                    JSON (Developer Friendly)
+                  </div>
+                </SelectItem>
+                <SelectItem value="pdf">
+                  <div className="flex items-center">
+                    <FileText className="mr-2 h-4 w-4 text-red-500" />
+                    PDF (Printable Report)
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -410,30 +577,30 @@ export function DataExport() {
               onChange={(e) => setOptions({ ...options, dateTo: e.target.value })}
             />
           </div>
-        </div>
 
-        <div className="flex justify-end">
-          <Button 
-            onClick={handleExport} 
-            disabled={exporting || !options.table}
-            className="flex items-center gap-2"
-          >
-            {exporting ? (
-              <>
-                <FileText className="h-4 w-4 animate-pulse" />
-                Exporting...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4" />
-                Export Data
-              </>
-            )}
-          </Button>
+          <div className="flex justify-end">
+            <Button
+              onClick={handleExport}
+              disabled={exporting || !options.table}
+              className="flex items-center gap-2"
+            >
+              {exporting ? (
+                <>
+                  <FileText className="h-4 w-4 animate-pulse" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Export Data
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-
-       
       </CardContent>
     </Card>
   );
-}
+};
+
+export default DataExport;
