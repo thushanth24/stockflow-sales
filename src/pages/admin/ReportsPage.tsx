@@ -565,25 +565,30 @@ export default function ReportsPage() {
 
       <Card className="mt-4 sm:mt-5">
         <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
-          <CardTitle className="text-base sm:text-lg font-semibold text-indigo-800">Sales Detail</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base sm:text-lg font-semibold text-indigo-800">Sales Detail</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0 md:p-6">
           {/* Mobile list view */}
           <div className="sm:hidden divide-y -mx-1">
-            {sales.map((sale) => (
+            {paginatedSales.map((sale) => (
               <div key={sale.id} className="p-2 flex flex-col gap-1 bg-white">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{new Date(sale.sale_date).toLocaleDateString()}</span>
                   <span className="text-sm font-semibold">Qty: {sale.quantity}</span>
                 </div>
-                <div className="text-base font-medium">{sale.products.name}</div>
+                <div className="text-base font-medium">{sale.products?.name || 'N/A'}</div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Revenue</span>
                   <span className="text-base font-semibold">Rs{Number(sale.revenue).toFixed(2)}</span>
                 </div>
               </div>
             ))}
-            {sales.length === 0 && (
+            {paginatedSales.length === 0 && (
               <div className="p-4 text-center text-muted-foreground">No sales data found for the selected date range</div>
             )}
           </div>
@@ -600,15 +605,15 @@ export default function ReportsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sales.map((sale) => (
+                {paginatedSales.map((sale) => (
                   <TableRow key={sale.id}>
                     <TableCell className="whitespace-nowrap">{new Date(sale.sale_date).toLocaleDateString()}</TableCell>
-                    <TableCell className="font-medium">{sale.products.name}</TableCell>
+                    <TableCell className="font-medium">{sale.products?.name || 'N/A'}</TableCell>
                     <TableCell className="whitespace-nowrap">{sale.quantity}</TableCell>
                     <TableCell className="whitespace-nowrap">Rs{Number(sale.revenue).toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
-                {sales.length === 0 && (
+                {paginatedSales.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
                       No sales data found for the selected date range
@@ -618,6 +623,118 @@ export default function ReportsPage() {
               </TableBody>
             </Table>
           </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t sm:px-6">
+              <div className="flex-1 flex justify-between sm:hidden">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={!canGoPrevious}
+                  className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                    canGoPrevious ? 'bg-white text-gray-700 hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={!canGoNext}
+                  className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                    canGoNext ? 'bg-white text-gray-700 hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{(currentPage - 1) * 10 + 1}</span> to{' '}
+                    <span className="font-medium">
+                      {Math.min(currentPage * 10, sales.length)}
+                    </span>{' '}
+                    of <span className="font-medium">{sales.length}</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button
+                      onClick={() => goToPage(1)}
+                      disabled={currentPage === 1}
+                      className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                        currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="sr-only">First</span>
+                      &laquo;
+                    </button>
+                    <button
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={!canGoPrevious}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        canGoPrevious ? 'text-gray-500 hover:bg-gray-50' : 'text-gray-300 cursor-not-allowed'
+                      }`}
+                    >
+                      <span className="sr-only">Previous</span>
+                      &lsaquo;
+                    </button>
+                    
+                    {/* Page numbers */}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      if (pageNum < 1 || pageNum > totalPages) return null;
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => goToPage(pageNum)}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                            currentPage === pageNum
+                              ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
+                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    
+                    <button
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={!canGoNext}
+                      className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        canGoNext ? 'text-gray-500 hover:bg-gray-50' : 'text-gray-300 cursor-not-allowed'
+                      }`}
+                    >
+                      <span className="sr-only">Next</span>
+                      &rsaquo;
+                    </button>
+                    <button
+                      onClick={() => goToPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+                        currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="sr-only">Last</span>
+                      &raquo;
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
       
