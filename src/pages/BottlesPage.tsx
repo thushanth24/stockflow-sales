@@ -48,6 +48,7 @@ const BOTTLE_TYPES: BottleType[] = [
   { id: 'dcsl_beer', name: 'DCSL BEER', unit: '750ML', price: 100 },
   { id: 'heinakan_beer', name: 'HEINAKAN BEER', unit: '625ML', price: 100 },
   { id: 'royal_sake', name: 'ROYAL SAKE', unit: '12.5', price: 60 },
+  { id: 'gal', name: 'Gal', unit: '1L', price: 20 },
 ];
 
 export default function BottlesPage() {
