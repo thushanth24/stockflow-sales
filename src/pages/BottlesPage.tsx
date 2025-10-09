@@ -69,10 +69,10 @@ export default function BottlesPage() {
     unit: '',
     price: '',
     quantity: '1',
-    date: new Date().toISOString().split('T')[0],
+    date: '',
   });
   const [selectedBottle, setSelectedBottle] = useState<BottleType | null>(null);
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date | null>(null);
   const [isSubmitting, setSubmitting] = useState(false);
   
   // Reset form when switching tabs
@@ -82,10 +82,10 @@ export default function BottlesPage() {
       unit: '',
       price: '',
       quantity: '1',
-      date: new Date().toISOString().split('T')[0],
+      date: '',
     });
     setSelectedBottle(null);
-    setDate(new Date());
+    setDate(null);
   };
 
   useEffect(() => {
@@ -187,6 +187,15 @@ export default function BottlesPage() {
 
     try {
       setSubmitting(true);
+      if (!date) {
+        toast({
+          title: 'Date Required',
+          description: 'Please select a date',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
       const quantity = parseInt(formData.quantity, 10);
       const operation = activeTab === 'add' ? quantity : -quantity;
 
@@ -198,7 +207,7 @@ export default function BottlesPage() {
             unit: formData.unit.trim(),
             price: parseFloat(formData.price),
             quantity: operation,
-            date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`,
+            date: formData.date || format(date, 'yyyy-MM-dd'),
             user_id: profile.id,
             operation_type: activeTab,
           },
@@ -339,13 +348,11 @@ export default function BottlesPage() {
                         mode="single"
                         selected={date}
                         onSelect={(newDate) => {
-                          if (newDate) {
-                            setDate(newDate);
-                            setFormData(prev => ({
-                              ...prev,
-                              date: newDate.toISOString().split('T')[0],
-                            }));
-                          }
+                          setDate(newDate || null);
+                          setFormData(prev => ({
+                            ...prev,
+                            date: newDate ? format(newDate, 'yyyy-MM-dd') : '',
+                          }));
                         }}
                         initialFocus
                       />
@@ -366,7 +373,7 @@ export default function BottlesPage() {
                 <Button 
                   type="submit" 
                   variant={activeTab === 'add' ? 'default' : 'destructive'}
-                  disabled={isSubmitting || !selectedBottle}
+                  disabled={isSubmitting || !selectedBottle || !date}
                 >
                   {isSubmitting ? (
                     'Processing...'
