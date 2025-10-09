@@ -166,16 +166,40 @@ export default function Dashboard() {
         
       if (bottlesError) throw bottlesError;
 
-      // Format sales data
-      const formattedSales = (salesData || []).map(sale => ({
-        id: sale.id,
-        quantity: sale.quantity,
-        revenue: sale.revenue,
-        sale_date: sale.sale_date,
-        category_name: sale.products?.categories?.name || 'Uncategorized',
-        product_name: sale.products?.name || 'Unknown Product',
-        unit_price: sale.products?.price || 0,
-      }));
+      // Group sales by product name and calculate totals
+      const productTotals = new Map();
+      
+      (salesData || []).forEach(sale => {
+        const productName = sale.products?.name || 'Unknown Product';
+        const existing = productTotals.get(productName);
+        const unitPrice = sale.products?.price || 0;
+        const revenue = sale.quantity * unitPrice;
+        
+        if (existing) {
+          // Update existing product total
+          existing.quantity += sale.quantity;
+          existing.revenue += revenue;
+          // Keep the earliest sale date
+          existing.sale_date = new Date(existing.sale_date) < new Date(sale.sale_date) 
+            ? existing.sale_date 
+            : sale.sale_date;
+        } else {
+          // Create new product total
+          productTotals.set(productName, {
+            id: sale.products?.id || 'unknown',
+            product_id: sale.products?.id || 'unknown',
+            quantity: sale.quantity,
+            revenue: revenue,
+            sale_date: sale.sale_date,
+            category_name: sale.products?.categories?.name || 'Uncategorized',
+            product_name: productName,
+            unit_price: unitPrice
+          });
+        }
+      });
+      
+      // Convert the map values to an array for the PDF generator
+      const formattedSales = Array.from(productTotals.values());
 
       // Format damage data
       const formattedDamages = (damageData || []).map(damage => ({
@@ -220,22 +244,52 @@ export default function Dashboard() {
         expense_date: entry.expense_date ? new Date(entry.expense_date).toLocaleDateString() : ''
       }));
 
-      // Format bottle data
-      const formattedBottles = (bottlesData || []).map(bottle => ({
-        id: bottle.id,
-        type: bottle.type,
-        unit: bottle.unit,
-        quantity: bottle.quantity,
-        price: bottle.price,
-        date: bottle.date,
-        operation_type: bottle.operation_type,
-        display_date: new Date(bottle.date).toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric' 
-        }),
-        total_value: bottle.quantity * bottle.price
-      }));
+      // Group bottles by type and unit
+      const bottleTotals = new Map();
+      
+      (bottlesData || []).forEach(bottle => {
+        const bottleKey = `${bottle.type}_${bottle.unit}`;
+        const existing = bottleTotals.get(bottleKey);
+        const totalValue = bottle.quantity * (bottle.price || 0);
+        
+        if (existing) {
+          // Update existing bottle total
+          existing.quantity += bottle.quantity;
+          existing.total_value += totalValue;
+          // Keep the earliest date
+          existing.display_date = new Date(existing.date) < new Date(bottle.date)
+            ? existing.display_date
+            : new Date(bottle.date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              });
+          existing.date = new Date(Math.min(
+            new Date(existing.date).getTime(),
+            new Date(bottle.date).getTime()
+          )).toISOString();
+        } else {
+          // Create new bottle total
+          bottleTotals.set(bottleKey, {
+            id: bottle.id,
+            type: bottle.type,
+            unit: bottle.unit,
+            quantity: bottle.quantity,
+            price: bottle.price,
+            date: bottle.date,
+            operation_type: bottle.operation_type,
+            display_date: new Date(bottle.date).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            }),
+            total_value: totalValue
+          });
+        }
+      });
+      
+      // Convert the map values to an array for the PDF generator
+      const formattedBottles = Array.from(bottleTotals.values());
 
       const reportDate = dateRange.from === dateRange.to 
         ? dateRange.from 
