@@ -250,6 +250,58 @@ export function DataExport() {
     }
   };
 
+  // Helper function to group and sum data by product
+  const groupAndSumData = (data: any[], tableType: string) => {
+    if (!data || data.length === 0) return [];
+    
+    const groupedData: Record<string, any> = {};
+    
+    data.forEach(item => {
+      // Skip summary rows
+      if (item.date === 'Total:') return;
+      
+      const key = `${item.product_name}_${item.category_name}_${item.unit_price}`;
+      
+      if (!groupedData[key]) {
+        groupedData[key] = {
+          ...item,
+          quantity: 0,
+          total_price: 0
+        };
+      }
+      
+      // Sum quantities and total prices
+      groupedData[key].quantity += Number(item.quantity) || 0;
+      groupedData[key].total_price += Number(item.total_price) || 0;
+    });
+    
+    // Convert back to array
+    const result = Object.values(groupedData);
+    
+    // Add summary row if we have data
+    if (result.length > 0) {
+      const totalQuantity = result.reduce((sum, item) => sum + (item.quantity || 0), 0);
+      const totalRevenue = result.reduce((sum, item) => sum + (item.total_price || 0), 0);
+      
+      const summaryRow: any = {
+        product_name: '',
+        category_name: '',
+        quantity: totalQuantity,
+        unit_price: 0,
+        total_price: totalRevenue,
+        date: 'Total:'
+      };
+      
+      if (tableType === 'damages') {
+        (summaryRow as DamagesRow).reason = 'Total';
+      }
+      
+      result.push(summaryRow);
+    }
+    
+    return result;
+  };
+
   const handleExport = async () => {
     if (!options.table) {
       toast({
@@ -272,8 +324,10 @@ export function DataExport() {
         let query = supabase
           .from('purchases')
           .select(`
+            id,
             quantity,
             purchase_date,
+            product_id,
             products (name, price, categories (name))
           `);
 
@@ -285,23 +339,58 @@ export function DataExport() {
         const { data: tableData, error: tableError } = await query;
         if (tableError) throw tableError;
 
-        // Transform the data to include category and product details
-        data = tableData?.map(record => ({
+        // First, get all purchase items
+        const purchaseItems = tableData?.map(record => ({
+          id: record.id,
           product_name: record.products?.name || 'N/A',
           category_name: record.products?.categories?.name || 'N/A',
-          quantity: record.quantity,
-          unit_price: record.products?.price || 0,
-          total_price: (record.products?.price || 0) * record.quantity,
-          date: record.purchase_date
+          quantity: Number(record.quantity) || 0,
+          unit_price: Number(record.products?.price) || 0,
+          total_price: (Number(record.products?.price) || 0) * (Number(record.quantity) || 0),
+          date: record.purchase_date,
+          product_id: record.product_id
         })) || [];
+        
+        // Group by product and sum quantities
+        const grouped: Record<string, any> = {};
+        purchaseItems.forEach(item => {
+          const key = `${item.product_id}_${item.unit_price}`;
+          if (!grouped[key]) {
+            grouped[key] = { ...item };
+          } else {
+            grouped[key].quantity += item.quantity;
+            grouped[key].total_price += item.total_price;
+          }
+        });
+        
+        data = Object.values(grouped);
+        
+        // Add total row
+        if (data.length > 0) {
+          const totalQuantity = data.reduce((sum, item) => sum + (item.quantity || 0), 0);
+          const totalAmount = data.reduce((sum, item) => sum + (item.total_price || 0), 0);
+          
+          data.push({
+            id: 'total',
+            product_name: '',
+            category_name: '',
+            quantity: totalQuantity,
+            unit_price: 0,
+            total_price: totalAmount,
+            date: 'Total:',
+            product_id: ''
+          });
+        }
       } else if (options.table === 'sales') {
         // Join sales with products and categories to get all required fields
         let query = supabase
           .from('sales')
           .select(`
+            id,
             quantity,
             revenue,
             sale_date,
+            product_id,
             products (name, price, categories (name))
           `);
 
@@ -313,41 +402,58 @@ export function DataExport() {
         const { data: tableData, error: tableError } = await query;
         if (tableError) throw tableError;
 
-        // Transform the data to include category and product details
-        const salesData: SalesRow[] = tableData?.map(record => ({
+        // First, get all sale items
+        const saleItems = tableData?.map(record => ({
+          id: record.id,
           product_name: record.products?.name || 'N/A',
           category_name: record.products?.categories?.name || 'N/A',
-          quantity: record.quantity,
-          unit_price: record.products?.price || 0,
-          total_price: record.revenue || 0,
-          date: record.sale_date || ''
+          quantity: Number(record.quantity) || 0,
+          unit_price: Number(record.products?.price) || 0,
+          total_price: Number(record.revenue) || 0,
+          date: record.sale_date || '',
+          product_id: record.product_id
         })) || [];
-
-        // Calculate overall total
-        const overallTotal = salesData.reduce((sum, item) => sum + (item.total_price || 0), 0);
         
-        // Add a summary row
-        if (salesData.length > 0) {
-          const summaryRow: SalesRow = {
+        // Group by product and sum quantities
+        const grouped: Record<string, any> = {};
+        saleItems.forEach(item => {
+          const key = `${item.product_id}_${item.unit_price}`;
+          if (!grouped[key]) {
+            grouped[key] = { ...item };
+          } else {
+            grouped[key].quantity += item.quantity;
+            grouped[key].total_price += item.total_price;
+          }
+        });
+        
+        data = Object.values(grouped);
+        
+        // Add total row
+        if (data.length > 0) {
+          const totalQuantity = data.reduce((sum, item) => sum + (item.quantity || 0), 0);
+          const totalAmount = data.reduce((sum, item) => sum + (item.total_price || 0), 0);
+          
+          data.push({
+            id: 'total',
             product_name: '',
             category_name: '',
-            quantity: 0,
+            quantity: totalQuantity,
             unit_price: 0,
-            total_price: overallTotal,
-            date: 'Total:'
-          };
-          salesData.push(summaryRow);
+            total_price: totalAmount,
+            date: 'Total:',
+            product_id: ''
+          });
         }
-
-        data = salesData;
       } else if (options.table === 'damages') {
         // Join damages with products and categories to get all required fields
         let query = supabase
           .from('damages')
           .select(`
+            id,
             quantity,
             reason,
             damage_date,
+            product_id,
             products (name, price, categories (name))
           `);
 
@@ -359,35 +465,50 @@ export function DataExport() {
         const { data: tableData, error: tableError } = await query;
         if (tableError) throw tableError;
 
-        // Transform the data to include category and product details
-        const damagesData: DamagesRow[] = tableData?.map(record => ({
+        // First, get all damage items
+        const damageItems = tableData?.map(record => ({
+          id: record.id,
           product_name: record.products?.name || 'N/A',
           category_name: record.products?.categories?.name || 'N/A',
-          quantity: record.quantity,
-          unit_price: record.products?.price || 0,
-          total_price: (record.products?.price || 0) * record.quantity,
+          quantity: Number(record.quantity) || 0,
+          unit_price: Number(record.products?.price) || 0,
+          total_price: (Number(record.products?.price) || 0) * (Number(record.quantity) || 0),
           reason: record.reason || 'N/A',
-          date: record.damage_date || ''
+          date: record.damage_date || '',
+          product_id: record.product_id
         })) || [];
-
-        // Calculate overall total
-        const overallTotal = damagesData.reduce((sum, item) => sum + (item.total_price || 0), 0);
         
-        // Add a summary row
-        if (damagesData.length > 0) {
-          const summaryRow: DamagesRow = {
+        // Group by product and sum quantities
+        const grouped: Record<string, any> = {};
+        damageItems.forEach(item => {
+          const key = `${item.product_id}_${item.unit_price}`;
+          if (!grouped[key]) {
+            grouped[key] = { ...item };
+          } else {
+            grouped[key].quantity += item.quantity;
+            grouped[key].total_price += item.total_price;
+          }
+        });
+        
+        data = Object.values(grouped);
+        
+        // Add total row
+        if (data.length > 0) {
+          const totalQuantity = data.reduce((sum, item) => sum + (item.quantity || 0), 0);
+          const totalAmount = data.reduce((sum, item) => sum + (item.total_price || 0), 0);
+          
+          data.push({
+            id: 'total',
             product_name: '',
             category_name: '',
-            quantity: 0,
+            quantity: totalQuantity,
             unit_price: 0,
-            total_price: overallTotal,
-            reason: '',
-            date: 'Total:'
-          };
-          damagesData.push(summaryRow);
+            total_price: totalAmount,
+            reason: 'Total',
+            date: 'Total:',
+            product_id: ''
+          });
         }
-
-        data = damagesData;
       } else if (options.table === 'other_income_entries') {
         let query = supabase
           .from('other_income_entries')
@@ -464,6 +585,11 @@ export function DataExport() {
           variant: 'destructive',
         });
         return;
+      }
+
+      // Apply grouping for purchases, sales, and damages
+      if (['purchases', 'sales', 'damages'].includes(options.table)) {
+        data = groupAndSumData(data, options.table);
       }
 
       const baseFilename = `${options.table}_${new Date().toISOString().split('T')[0]}`;

@@ -198,7 +198,7 @@ export default function BottlesPage() {
             unit: formData.unit.trim(),
             price: parseFloat(formData.price),
             quantity: operation,
-            date: date.toISOString().split('T')[0],
+            date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`,
             user_id: profile.id,
             operation_type: activeTab,
           },
