@@ -44,7 +44,7 @@ interface BottleType {
 const BOTTLE_TYPES: BottleType[] = [
   { id: 'lion_beer_750', name: 'Lion Beer', unit: '750ML', price: 100 },
   { id: 'dcsl_large', name: 'DCSL LARGE', unit: '750ML', price: 60 },
-  { id: 'dcsl_small', name: 'DCSL SMALL', unit: '375ML', price: 30 },
+  { id: 'dcsl_small', name: 'DCSL SMALL', unit: '375ML', price: 40 },
   { id: 'dcsl_beer', name: 'DCSL BEER', unit: '750ML', price: 100 },
   { id: 'heinakan_beer', name: 'HEINAKAN BEER', unit: '625ML', price: 100 },
   { id: 'royal_sake', name: 'ROYAL SAKE', unit: '12.5', price: 60 },
