@@ -538,9 +538,18 @@ export const generateSalesReportPDF = async (
   // Net Total
   currentY += 15;
   doc.setFont('helvetica', 'bold');
-  doc.text('Net Total:', margin + 20, currentY);
-  const netTotal = totalSales - totalReturns - totalBottles - totalDamages + totalOtherIncome - totalOtherExpenses;
+  doc.text('Net Total (Before Damages):', margin + 20, currentY);
+  const netTotal = totalSales - totalReturns - totalBottles + totalOtherIncome - totalOtherExpenses;
   doc.text(`Rs ${netTotal.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
+  
+  // Show damages as informational
+  if (totalDamages > 0) {
+    currentY += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text('(Damages not included in total):', margin + 20, currentY);
+    doc.text(`- Rs ${totalDamages.toFixed(2)}`, pageWidth - margin - 20, currentY, { align: 'right' });
+  }
 
   // Add a line above the summary
   doc.setDrawColor(209, 213, 219); // Gray-300
