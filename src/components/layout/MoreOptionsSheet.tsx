@@ -54,8 +54,8 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
 
   const adminItems = [
     { icon: BarChart3, label: 'Reports', href: '/dashboard/reports' },
-    { icon: Package, label: 'Add Product', href: '/dashboard/products/add' },
-    { icon: Package2, label: 'Add Category', href: '/dashboard/categories/add' },
+    { icon: Package, label: 'Products', href: '/dashboard/products' },
+    { icon: Package2, label: 'Categories', href: '/dashboard/categories' },
     { icon: AlertTriangle, label: 'Damage Reports', href: '/dashboard/damage-reports' },
   ];
 
