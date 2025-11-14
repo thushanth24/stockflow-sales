@@ -16,10 +16,10 @@ const navigationItems = [
     path: '/dashboard/purchases',
   },
   {
-    id: 'stock-update',
+    id: 'sales-entry',
     label: 'Sales',
     icon: Package,
-    path: '/dashboard/stock-update',
+    path: '/dashboard/sales-entry',
   },
   {
     id: 'more',

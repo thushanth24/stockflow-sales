@@ -14,6 +14,7 @@ import {
   Bell,
   HelpCircle,
   X,
+  ClipboardCheck,
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -49,7 +50,7 @@ export function MoreOptionsSheet({ isOpen, onClose }: MoreOptionsSheetProps) {
 
   // Items that are NOT in the main bottom navigation or FAB
   const staffItems = [
-    // No staff items - all moved to FAB or bottom nav
+    { icon: ClipboardCheck, label: 'Stock Update', href: '/dashboard/stock-update' },
   ];
 
   const adminItems = [

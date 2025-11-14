@@ -18,6 +18,7 @@ import {
   TrendingUp,
   Package2,
   ClipboardList,
+  ClipboardCheck,
   Shield,
   LogOut,
   LayoutDashboard,
@@ -57,7 +58,8 @@ export function Sidebar() {
     { icon: Package2, label: 'Products', href: '/dashboard/products' },
     { icon: Package, label: 'Categories', href: '/dashboard/categories' },
     { icon: ShoppingCart, label: 'Add Purchase', href: '/dashboard/purchases' },
-    { icon: ClipboardList, label: 'Sales Entry', href: '/dashboard/stock-update' },
+    { icon: ClipboardCheck, label: 'Stock Update', href: '/dashboard/stock-update' },
+    { icon: ClipboardList, label: 'Sales Entry', href: '/dashboard/sales-entry' },
     { icon: RefreshCw, label: 'Restore Sales', href: '/dashboard/restore-sales' },
     { icon: Package, label: 'Bottles', href: '/dashboard/bottles' },
     { icon: AlertTriangle, label: 'Report Damage', href: '/dashboard/damages' },
@@ -139,6 +141,13 @@ export function Sidebar() {
                       hover: 'from-emerald-400 to-green-500',
                       icon: 'text-emerald-600',
                       text: 'text-emerald-800'
+                    };
+                  case 'Stock Update':
+                    return {
+                      active: 'from-cyan-500 to-sky-600',
+                      hover: 'from-cyan-400 to-sky-500',
+                      icon: 'text-cyan-600',
+                      text: 'text-cyan-800'
                     };
                   case 'Sales Entry':
                     return {

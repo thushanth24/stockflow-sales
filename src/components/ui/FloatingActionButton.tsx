@@ -19,7 +19,14 @@ interface FloatingActionButtonProps {
 }
 
 const actionItems = [
- 
+  {
+    id: 'stock-update',
+    label: 'Stock Update',
+    icon: Tag,
+    href: '/dashboard/stock-update',
+    color: 'bg-blue-500 hover:bg-blue-600',
+    iconColor: 'text-white'
+  },
   {
     id: 'bottles',
     label: 'Bottles',
